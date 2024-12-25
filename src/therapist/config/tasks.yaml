@@ -1,17 +1,42 @@
-research_task:
+visual_context_recognition_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is 2024.
+    Give a detailed description of {image}
+    Analyse the image and provide insights on visual emotional content.
+    If {image} is empy, do nothing and note that in the report.
+    1. Start by clearly identifying the situation or issue the user wants to work on if given.
+    2. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
+    3. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
+    Return a report of your analysis.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+   Firstly listing the image file name and add a visual feedback document with a description and analyzis of the image with insights on the user's emotional state and suggested reframing strategies.
+  agent: imageTherapist
 
-reporting_task:
+cognitive_reframing_task:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    If no text is give do nothing and note that in the feedback document.
+    Analyse {text}, to identify cognitive distortions.
+    If negative thoughts are identified do the following steps:
+    1. Start by clearly identifying the situation or issue the user wants to work on if given.
+    2. Assess the emotional tone of the input using sentiment analysis.
+    3. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
+    4. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
+    If the tone is neutral or positive do nothing.
+    Create a deatailed feedback document
   expected_output: >
-    A fully fledge reports with the mains topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    Firstly the analysed text, followed by the identified cognitive distortions, the emotional state, tone of the user and suggested reframing strategies.
+  agent: textTherapist
+
+conversation_task:
+  description: >
+    Introduce yourself if the user introduces himself/herself.
+    Have an engaging back-and-forth conversation with the user.
+    Engage in small talk to get to know the user
+    Aggregate outputs from multiple agents if they are provided.
+    Analyse all insights to form a holistic view of the user's mental and emotional state.
+    Synthesize tailored feedback that incorporates elements from all modalities.
+    If there is negativity:
+    1. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
+    2. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
+  expected_output: >
+    Provide an answer to the input of the user. The answer should be between 1 or 2 sentences.
+  agent: therapist

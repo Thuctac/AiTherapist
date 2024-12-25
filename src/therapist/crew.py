@@ -1,5 +1,6 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
+from crewai_tools import VisionTool
 
 # If you want to run a snippet of code before or after the crew starts, 
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -17,34 +18,59 @@ class Therapist():
 
 	# If you would like to add tools to your agents, you can learn more about it here:
 	# https://docs.crewai.com/concepts/agents#agent-tools
+	vision_tool = VisionTool()
+
 	@agent
-	def researcher(self) -> Agent:
+	def imageTherapist(self) -> Agent:
 		return Agent(
-			config=self.agents_config['researcher'],
-			verbose=True
+			config = self.agents_config['imageTherapist'],
+            tools = [self.vision_tool],
+            verbose = False,
+			allow_delegation=True,
 		)
 
 	@agent
-	def reporting_analyst(self) -> Agent:
+	def textTherapist(self) -> Agent:
 		return Agent(
-			config=self.agents_config['reporting_analyst'],
-			verbose=True
+			config=self.agents_config['textTherapist'],
+			memory = True,
+			human_input = True,
+			verbose=False,
+			allow_delegation=True,
+		)
+	
+	@agent
+	def therapist(self) -> Agent:
+		return Agent(
+			config=self.agents_config['therapist'],
+			memory=True,
+			verbose=False,
+			allow_delegation=True,
 		)
 
 	# To learn more about structured task outputs, 
 	# task dependencies, and task callbacks, check out the documentation:
 	# https://docs.crewai.com/concepts/tasks#overview-of-a-task
 	@task
-	def research_task(self) -> Task:
+	def visual_context_recognition_task(self) -> Task:
 		return Task(
-			config=self.tasks_config['research_task'],
+			config=self.tasks_config['visual_context_recognition_task'],
+			output_file='visual_context_recognition_report.md'
 		)
 
 	@task
-	def reporting_task(self) -> Task:
+	def cognitive_reframing_task(self) -> Task:
 		return Task(
-			config=self.tasks_config['reporting_task'],
-			output_file='report.md'
+			config=self.tasks_config['cognitive_reframing_task'],
+			output_file='cognitive_reframing_report.md',
+		)
+	
+	@task
+	def conversation_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['conversation_task'],
+			context= [self.visual_context_recognition_task(), self.cognitive_reframing_task()],
+			output_file='conversation.md',
 		)
 
 	@crew
@@ -56,7 +82,5 @@ class Therapist():
 		return Crew(
 			agents=self.agents, # Automatically created by the @agent decorator
 			tasks=self.tasks, # Automatically created by the @task decorator
-			process=Process.sequential,
-			verbose=True,
-			# process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+			verbose=False,
 		)

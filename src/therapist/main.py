@@ -15,44 +15,53 @@ def run():
     """
     Run the crew.
     """
-    inputs = {
-        'topic': 'AI LLMs'
-    }
-    Therapist().crew().kickoff(inputs=inputs)
+    therapist = Therapist()
+
+    crew = therapist.crew()
+
+    conversation_history = ""
+
+    print("/exit to end the conversation")
+
+    initial_text = "Therapist: Hello! I am here to listen and support you! How can I help you? \n"
+
+    conversation_history += initial_text
+
+    print(initial_text)
+
+    while True:
+
+        user_text_prompt = ""
+        user_text_prompt += input("Text input: ")
+
+        conversation_history += "Client: " + user_text_prompt + "\n"
+        print("(Text Input) Client: " + user_text_prompt)
+
+        if user_text_prompt == "/exit":
+            print("Goodbye")
+            break
+
+        image_url = ""
+        image_url += input("Image Url: ")
 
 
-def train():
-    """
-    Train the crew for a given number of iterations.
-    """
-    inputs = {
-        "topic": "AI LLMs"
-    }
-    try:
-        Therapist().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
+        conversation_history += "Client: " + image_url + "\n"
+        print("(Image Input) Client: " + image_url)
 
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
 
-def replay():
-    """
-    Replay the crew execution from a specific task.
-    """
-    try:
-        Therapist().crew().replay(task_id=sys.argv[1])
+        inputs = {
+            'image': image_url,
+            'text': user_text_prompt,
+            'history': conversation_history
+        }
 
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
+        result = crew.kickoff(inputs=inputs)
+        if image_url != "" or user_text_prompt != "":
+            conversation_history += "Therapist: " + result.raw + "\n"
+            print("Therapist: " + result.raw)
 
-def test():
-    """
-    Test the crew execution and returns the results.
-    """
-    inputs = {
-        "topic": "AI LLMs"
-    }
-    try:
-        Therapist().crew().test(n_iterations=int(sys.argv[1]), openai_model_name=sys.argv[2], inputs=inputs)
+        else:
+            break
 
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
+
+run()
