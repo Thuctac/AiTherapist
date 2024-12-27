@@ -1,11 +1,5 @@
-import sys
-import os
 import random
-import warnings
-from therapist.crew import Therapist
-
-# Suppress specific warnings
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+from crew import Therapist
 
 class TherapySession:
     def __init__(self, therapist_name="Kevin"):
@@ -34,7 +28,7 @@ class TherapySession:
         self.initial_text = random.choice(self.welcome_messages)
         self.conversation_history = "Therapist: " + self.initial_text + "\n"
 
-    def run(self, user_text_prompt=None, image_file=None):
+    def run(self, user_text_prompt=None, image_path=None):
         """
         Process user input and interact with the therapist.
 
@@ -45,19 +39,19 @@ class TherapySession:
         Returns:
             str: Therapist's response.
         """
-        if not user_text_prompt and not image_file:
+        if not user_text_prompt and not image_path:
             return "I’m here to listen, but I didn’t catch that. Could you try again?"
 
         # Log user input
         if user_text_prompt:
             self.conversation_history += f"Client (Text): {user_text_prompt}\n"
-        if image_file:
-            self.conversation_history += f"Client (Image): {image_file.name}\n"
+        if image_path:
+            self.conversation_history += f"Client (Image): {image_path}\n"
 
         # Prepare inputs for the therapist
         inputs = {
             'text': user_text_prompt or "",
-            'image': image_file.read() if image_file else "",
+            'image': image_path if image_path else "",
             'history': self.conversation_history
         }
 
@@ -71,3 +65,6 @@ class TherapySession:
         # Log therapist's response
         self.conversation_history += f"Therapist: {response}\n"
         return response
+    
+    def getInitialMessage(self):
+        return self.initial_text
