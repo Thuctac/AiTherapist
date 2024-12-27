@@ -1,2 +1,11 @@
 .env
+.venv
+.vscode
+pyproject.toml
 __pycache__/
+cognitive_reframing_report.md
+conversation.md
+visual_context_recognition_report.md
+.DS_Store
+src/.DS_Store
+src/therapist/.DS_Store
