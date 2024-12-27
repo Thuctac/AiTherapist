@@ -17,6 +17,7 @@ class ChatWindow(ctk.CTk):
         
         self.title("AI Therapist")
         self.geometry("600x800")
+        self.center_window()
         ctk.set_appearance_mode("dark")
         self.waiting_response = False
         
@@ -24,6 +25,23 @@ class ChatWindow(ctk.CTk):
         self._create_widgets()
         self._setup_bindings()
         self._add_message(self.therapy.getInitialMessage(), "ai")
+
+        self.attributes('-topmost', True)
+
+
+    def center_window(self):
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        window_width = 600
+        window_height = 800
+
+        position_top = int(screen_height / 2 - window_height / 2)
+        position_right = int(screen_width / 2 - window_width / 2)
+
+        self.geometry(f'{window_width}x{window_height}+{position_right}+{position_top}')
+        
+
+    
         
     def _setup_grid(self):
         self.grid_columnconfigure(0, weight=1)
