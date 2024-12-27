@@ -2,13 +2,15 @@ visual_context_recognition_task:
   description: >
     Give a detailed description of {image}
     Analyse the image and provide insights on visual emotional content.
-    If {image} is empy, do nothing and note that in the report.
+    If {image} is empy, note that in the report, else follow the next steps:
     1. Start by clearly identifying the situation or issue the user wants to work on if given.
     2. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
     3. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
     Return a report of your analysis.
   expected_output: >
-   Firstly listing the image file name and add a visual feedback document with a description and analyzis of the image with insights on the user's emotional state and suggested reframing strategies.
+    A structured report:
+    First section should contain a detailed description of the image. Second section contains the analysis of the image which covers the insights into the user, the situation of the user,
+    the emotional content of the image and the emotional tone of the image. The third section provides suggestions to possible reframing techniques if they are needed.
   agent: imageTherapist
 
 cognitive_reframing_task:
@@ -23,20 +25,20 @@ cognitive_reframing_task:
     If the tone is neutral or positive do nothing.
     Create a deatailed feedback document
   expected_output: >
-    Firstly the analysed text, followed by the identified cognitive distortions, the emotional state, tone of the user and suggested reframing strategies.
+    A structured feedback document:
+    The first section contains the provided text. The second section contains the analysis which covers the identified cognitive distortions, the emotional state, tone of the user.
+    The third section contains possible suggestions to reframe the negative thoughts.
   agent: textTherapist
 
 conversation_task:
   description: >
     Introduce yourself if the user introduces himself/herself.
     Have an engaging back-and-forth conversation with the user.
-    Engage in small talk to get to know the user
+    Engage in small talk to get to know the user.
     Aggregate outputs from multiple agents if they are provided.
     Analyse all insights to form a holistic view of the user's mental and emotional state.
-    Synthesize tailored feedback that incorporates elements from all modalities.
-    If there is negativity:
-    1. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
-    2. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
+    Synthesize tailored feedback that incorporates elements from all specialists.
+    Only apply the provided suggestions of the specialists if they are needed.
   expected_output: >
     Provide an answer to the input of the user. The answer should be between 1 or 2 sentences.
   agent: therapist
