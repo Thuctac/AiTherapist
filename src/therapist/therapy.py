@@ -8,27 +8,8 @@ class TherapySession:
         self.crew = self.therapist.crew()
         self.conversation_history = ""
         self.therapist_name = therapist_name
-        self.welcome_messages = [
-            f"Hi, I’m {self.therapist_name}. Before we begin, tell me a little about yourself — what’s on your mind today?",
-            f"Hello! I’m {self.therapist_name}. What’s your name? Let’s start by getting to know each other.",
-            f"Hi, I’m {self.therapist_name}. How are you feeling today? I’d love to know a bit about you.",
-            f"Hey, I’m {self.therapist_name}. What brings you here today?",
-            f"Hi! I’m {self.therapist_name}. Tell me a bit about yourself — what’s been on your mind lately?",
-            f"Hello, I’m {self.therapist_name}. I’d like to know more about you. What’s something you’d like to share?",
-            f"Hi, I’m {self.therapist_name}. I’d love to get to know you better — what’s one thing you’d like to share about yourself?",
-            f"Hello! I’m {self.therapist_name}. Let’s start with you — how has your day been so far?",
-            f"Hi, I’m {self.therapist_name}. I’m here to listen. Can you tell me a little about what’s been going on?",
-            f"Hi, I’m {self.therapist_name}. What’s one thing you’d like me to know about you as we begin?",
-            f"Hello! I’m {self.therapist_name}. If you could describe your current state of mind in one word, what would it be?",
-            f"Hi, I’m {self.therapist_name}. What’s something you’d like to focus on in our conversations?",
-            f"Hey there, I’m {self.therapist_name}. I’d love to know more about you — what’s been on your mind?",
-            f"Hi, I’m {self.therapist_name}. Let’s start with you. How would you describe what you’re feeling right now?",
-            f"Hello! I’m {self.therapist_name}. What’s the first thing you’d like me to know about you?"
-        ]
-        self.initial_text = random.choice(self.welcome_messages)
-        self.conversation_history = "Therapist: " + self.initial_text + "\n"
 
-    def run(self, user_text_prompt=None, image_path=None):
+    def run(self, user_text_prompt=None, image_path=None, audio_path=None, conversation_log=None):
         """
         Process user input and interact with the therapist.
 
@@ -39,6 +20,7 @@ class TherapySession:
         Returns:
             str: Therapist's response.
         """
+        self.conversation_history = conversation_log
         if not user_text_prompt and not image_path:
             return "I’m here to listen, but I didn’t catch that. Could you try again?"
 
@@ -66,5 +48,3 @@ class TherapySession:
         self.conversation_history += f"Therapist: {response}\n"
         return response
     
-    def getInitialMessage(self):
-        return self.initial_text
