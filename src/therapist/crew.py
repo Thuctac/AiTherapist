@@ -25,7 +25,7 @@ class Therapist():
 		return Agent(
 			config = self.agents_config['imageTherapist'],
             tools = [self.vision_tool],
-            verbose = False,
+            verbose = True,
 			allow_delegation=True,
 		)
 
@@ -33,18 +33,23 @@ class Therapist():
 	def textTherapist(self) -> Agent:
 		return Agent(
 			config=self.agents_config['textTherapist'],
-			memory = True,
-			human_input = True,
-			verbose=False,
+			verbose=True,
 			allow_delegation=True,
 		)
+	
+	#@agent
+	#def voiceTherapist(self) -> Agent:
+	#	return Agent(
+	#		config=self.agents_config['voiceTherapist'],
+	#		tools = 
+	#	)
 	
 	@agent
 	def therapist(self) -> Agent:
 		return Agent(
 			config=self.agents_config['therapist'],
 			memory=True,
-			verbose=False,
+			verbose=True,
 			allow_delegation=True,
 		)
 
@@ -55,14 +60,14 @@ class Therapist():
 	def visual_context_recognition_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['visual_context_recognition_task'],
-			output_file='visual_context_recognition_report.md'
+			output_file='report/ImageTherapist_report.md'
 		)
 
 	@task
 	def cognitive_reframing_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['cognitive_reframing_task'],
-			output_file='cognitive_reframing_report.md',
+			output_file='report/TextTherapist_report.md',
 		)
 	
 	@task
@@ -70,7 +75,7 @@ class Therapist():
 		return Task(
 			config=self.tasks_config['conversation_task'],
 			context= [self.visual_context_recognition_task(), self.cognitive_reframing_task()],
-			output_file='conversation.md',
+			output_file='report/Output.md',
 		)
 
 	@crew

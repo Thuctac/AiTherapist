@@ -15,7 +15,7 @@ visual_context_recognition_task:
 
 cognitive_reframing_task:
   description: >
-    If no text is give do nothing and note that in the feedback document.
+    If text: {text} is empty do nothing and note that in the feedback document.
     Analyse {text}, to identify cognitive distortions.
     If negative thoughts are identified do the following steps:
     1. Start by clearly identifying the situation or issue the user wants to work on if given.
@@ -26,7 +26,7 @@ cognitive_reframing_task:
     Create a deatailed feedback document
   expected_output: >
     A structured feedback document:
-    The first section contains the provided text. The second section contains the analysis which covers the identified cognitive distortions, the emotional state, tone of the user.
+    The first section contains {text}. The second section contains the analysis which covers the identified cognitive distortions, the emotional state, tone of the user.
     The third section contains possible suggestions to reframe the negative thoughts.
   agent: textTherapist
 
@@ -38,6 +38,7 @@ conversation_task:
     Aggregate outputs from multiple agents if they are provided.
     Analyse all insights to form a holistic view of the user's mental and emotional state.
     Synthesize tailored feedback that incorporates elements from all specialists.
+    If there are any negative thoughts, ask the user about the reasons or the cause of the problem with the user.
     Only apply the provided suggestions of the specialists if they are needed.
   expected_output: >
     Provide an answer to the input of the user. The answer should be between 1 or 2 sentences.
