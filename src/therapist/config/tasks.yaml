@@ -19,14 +19,14 @@ cognitive_reframing_task:
     Analyse {text}, to identify cognitive distortions.
     If negative thoughts are identified do the following steps:
     1. Start by clearly identifying the situation or issue the user wants to work on if given.
-    2. Assess the emotional tone of the input using sentiment analysis.
+    2. Apply emotion detection on the given text
     3. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
     4. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
     If the tone is neutral or positive do nothing.
     Create a deatailed feedback document
   expected_output: >
     A structured feedback document:
-    The first section contains {text}. The second section contains the analysis which covers the identified cognitive distortions, the emotional state, tone of the user.
+    The first section contains {text}. The second section contains the analysis which covers identified cognitive distortions, the emotional state and the emotional tone of the user.
     The third section contains possible suggestions to reframe the negative thoughts.
   agent: textTherapist
 
