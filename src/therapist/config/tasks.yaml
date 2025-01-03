@@ -1,12 +1,16 @@
 visual_context_recognition_task:
   description: >
+    If there is no image_path: {image}, provided, note that in the report, else follow the next steps:
     Give a detailed description of image path: {image}
     Analyse the image and provide insights on visual emotional content.
-    If there is no image_path: {image}, provided, note that in the report, else follow the next steps:
     1. Start by clearly identifying the situation or issue the user wants to work on if given.
     2. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
-    3. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
-    Return a report of your analysis.
+    3. Looking at the situation from a different angle or another person’s perspective. Imagine how someone else might view the same situation. Consider the broader context.
+    4. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones. What can be learned from this experience? Are there potential benefits or opportunities in this challenge? 
+    5. Reduce the perceived severity of the situation: What’s the worst-case scenario, and how likely is it? How would you handle it if it happened? Example Output: "Even if the worst happens, what could you do to recover or improve things?"
+    6. Apply gratitude reframing or humor when appropriate: Can the user find something to be thankful for in the situation? Is there a lighter or humorous side to this issue?
+    7. Encourage Reflection: Allow the user to reflect on the reframing process: Does the reframe feel more constructive? Are there additional thoughts or feelings to explore?
+    Create a detailed report.
   expected_output: >
     A structured report:
     First section should contain a detailed description of the image. Second section contains the analysis of the image which covers the insights into the user, the situation of the user,
@@ -22,24 +26,50 @@ cognitive_reframing_task:
     2. Apply emotion detection on the given text
     3. If the text is positive give only as suggestion to pursue with usual smalltalk with the user instead of reframing techniques
     4. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
-    5. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones.
-    Create a deatailed feedback document
+    5. Looking at the situation from a different angle or another person’s perspective. Imagine how someone else might view the same situation. Consider the broader context.
+    6. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones. What can be learned from this experience? Are there potential benefits or opportunities in this challenge? 
+    7. Reduce the perceived severity of the situation: What’s the worst-case scenario, and how likely is it? How would you handle it if it happened? Example Output: "Even if the worst happens, what could you do to recover or improve things?"
+    8. Apply gratitude reframing or humor when appropriate: Can the user find something to be thankful for in the situation? Is there a lighter or humorous side to this issue?
+    9. Encourage Reflection: Allow the user to reflect on the reframing process: Does the reframe feel more constructive? Are there additional thoughts or feelings to explore?
+    Create a detailed feedback document
   expected_output: >
     A structured feedback document:
     The first section contains {text}. The second section contains the analysis which covers identified cognitive distortions, the emotional state and the emotional tone of the user.
-    The third section contains possible suggestions to continue the conversation or if there are negative thoughts on how to reframe them.
+    The third section contains possible suggestions for the therapist what he can say to continue with the conversation or how to reframe the negative thoughts.
   agent: textTherapist
+
+audio_emotion_insight_task:
+  description: >
+    If no audio path:{audio_path} is given, note that in the report, else follow the next steps:
+    1. Use the VoiceTranscriptionTool to transcribe the audio to text and correct possible mistakes in the transcription.
+    2. Analyse the transcription.
+    3. Start by clearly identifying the situation or issue the user wants to work on if given.
+    4. Apply emotion detection on the given transcription.
+    5. Questioning the validity of negative thoughts. Are there alternative, more balanced, or rational thoughts that might be more helpful in the situation?
+    6. Looking at the situation from a different angle or another person’s perspective. Imagine how someone else might view the same situation. Consider the broader context.
+    7. Reframe the user's unhelpful thoughts and situations into more balanced, realistic, and constructive ones. What can be learned from this experience? Are there potential benefits or opportunities in this challenge? 
+    8. Reduce the perceived severity of the situation: What’s the worst-case scenario, and how likely is it? How would you handle it if it happened? Example Output: "Even if the worst happens, what could you do to recover or improve things?"
+    9. Apply gratitude reframing or humor when appropriate: Can the user find something to be thankful for in the situation? Is there a lighter or humorous side to this issue?
+    10. Encourage Reflection: Allow the user to reflect on the reframing process: Does the reframe feel more constructive? Are there additional thoughts or feelings to explore?
+    Create a detailed feedback document
+  expected_output: >
+    A structured feedback document:
+    The first section contains the transcription from {audio_path}. The second section contains the analysis which covers identified cognitive distortions, the emotional state and the emotional tone of the user.
+    The third section contains possible suggestions for the therapist what he can say to continue with the conversation or how to reframe the negative thoughts. Provide a rewritten, balanced, and constructive version of their thoughts.
+  agent: voiceTherapist
+
 
 conversation_task:
   description: >
     Introduce yourself if the user introduces himself/herself.
     Have an engaging back-and-forth conversation with the user.
     Engage in small talk to get to know the user.
+    Paraphrase the user.
     Aggregate outputs from multiple agents if they are provided.
     Analyse all insights to form a holistic view of the user's mental and emotional state.
     Synthesize tailored feedback that incorporates elements from all specialists.
-    If there are any negative thoughts, ask the user about the reasons or the cause of the problem with the user.
+    If there are any negative thoughts, reframe them by applying the suggestions of the other agents
     Only apply the provided suggestions of the specialists if they are needed.
   expected_output: >
-    Provide an answer to the input of the user. The answer should be between 1 or 2 sentences.
+    Provide an answer to the input of the user which aims to reframe negative thoughts. The answer should be between 1 or 2 sentences.
   agent: therapist

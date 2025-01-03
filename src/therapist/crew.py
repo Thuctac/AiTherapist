@@ -1,6 +1,7 @@
 from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import VisionTool
+from tools.voice_transcription_tool import VoiceTranscriptionTool
 
 # If you want to run a snippet of code before or after the crew starts, 
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -19,6 +20,7 @@ class Therapist():
 	# If you would like to add tools to your agents, you can learn more about it here:
 	# https://docs.crewai.com/concepts/agents#agent-tools
 	vision_tool = VisionTool()
+	voice_tool = VoiceTranscriptionTool()
 
 	@agent
 	def imageTherapist(self) -> Agent:
@@ -26,7 +28,6 @@ class Therapist():
 			config = self.agents_config['imageTherapist'],
             tools = [self.vision_tool],
             verbose = True,
-			allow_delegation=True,
 		)
 
 	@agent
@@ -34,15 +35,15 @@ class Therapist():
 		return Agent(
 			config=self.agents_config['textTherapist'],
 			verbose=True,
-			allow_delegation=True,
 		)
 	
-	#@agent
-	#def voiceTherapist(self) -> Agent:
-	#	return Agent(
-	#		config=self.agents_config['voiceTherapist'],
-	#		tools = 
-	#	)
+	@agent
+	def voiceTherapist(self) -> Agent:
+		return Agent(
+			config=self.agents_config['voiceTherapist'],
+			tools = [self.voice_tool],
+			verbose = True,
+		)
 	
 	@agent
 	def therapist(self) -> Agent:
@@ -50,7 +51,6 @@ class Therapist():
 			config=self.agents_config['therapist'],
 			memory=True,
 			verbose=True,
-			allow_delegation=True,
 		)
 
 	# To learn more about structured task outputs, 
@@ -71,10 +71,17 @@ class Therapist():
 		)
 	
 	@task
+	def audio_emotion_insight_task(self) -> Task:
+		return Task(
+			config=self.tasks_config['audio_emotion_insight_task'],
+			output_file='report/VoiceTherapist_report.md',
+		)
+	
+	@task
 	def conversation_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['conversation_task'],
-			context= [self.visual_context_recognition_task(), self.cognitive_reframing_task()],
+			context= [self.visual_context_recognition_task(), self.cognitive_reframing_task(), self.audio_emotion_insight_task()],
 			output_file='report/Output.md',
 		)
 

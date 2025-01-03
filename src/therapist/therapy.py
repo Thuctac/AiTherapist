@@ -2,12 +2,11 @@ import random
 from crew import Therapist
 
 class TherapySession:
-    def __init__(self, therapist_name="Kevin"):
+    def __init__(self):
 
         self.therapist = Therapist()
         self.crew = self.therapist.crew()
         self.conversation_history = ""
-        self.therapist_name = therapist_name
 
     def run(self, user_text_prompt=None, image_path=None, audio_path=None, conversation_log=None):
         """
@@ -21,19 +20,12 @@ class TherapySession:
             str: Therapist's response.
         """
         self.conversation_history = conversation_log
-        if not user_text_prompt and not image_path:
-            return "I’m here to listen, but I didn’t catch that. Could you try again?"
-
-        # Log user input
-        if user_text_prompt:
-            self.conversation_history += f"Client (Text): {user_text_prompt}\n"
-        if image_path:
-            self.conversation_history += f"Client (Image): {image_path}\n"
 
         # Prepare inputs for the therapist
         inputs = {
             'text': user_text_prompt or "",
             'image': image_path if image_path else "",
+            'audio_path': audio_path if audio_path else "",
             'history': self.conversation_history
         }
 
