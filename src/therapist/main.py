@@ -1,5 +1,5 @@
-from ui import ChatWindow
+from ui.chatWindow import ChatWindow
+from therapy import TherapySession
 
-
-app = ChatWindow()
+app = ChatWindow(TherapySession())
 app.mainloop()
