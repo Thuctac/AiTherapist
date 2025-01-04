@@ -60,7 +60,8 @@ class Therapist():
 	def visual_context_recognition_task(self) -> Task:
 		return Task(
 			config=self.tasks_config['visual_context_recognition_task'],
-			output_file='report/ImageTherapist_report.md'
+			output_file='report/ImageTherapist_report.md',
+			async_execution=True,
 		)
 
 	@task
@@ -68,6 +69,7 @@ class Therapist():
 		return Task(
 			config=self.tasks_config['cognitive_reframing_task'],
 			output_file='report/TextTherapist_report.md',
+			async_execution=True,
 		)
 	
 	@task
@@ -75,14 +77,16 @@ class Therapist():
 		return Task(
 			config=self.tasks_config['audio_emotion_insight_task'],
 			output_file='report/VoiceTherapist_report.md',
+			async_execution=True,
 		)
 	
 	@task
-	def conversation_task(self) -> Task:
+	def multimodal_conversation_task(self) -> Task:
 		return Task(
-			config=self.tasks_config['conversation_task'],
+			config=self.tasks_config['multimodal_conversation_task'],
 			context= [self.visual_context_recognition_task(), self.cognitive_reframing_task(), self.audio_emotion_insight_task()],
 			output_file='report/Output.md',
+			async_execution=False,
 		)
 
 	@crew

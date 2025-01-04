@@ -17,7 +17,7 @@ visual_context_recognition_task:
     A structured report:
     1. Detailed description of the image.
     2. Emotional analysis, including insights into user-related context, if any.
-    3. Suggestions for reframing techniques, tailored to the visual emotional content.
+    3. Suggestions for reframing techniques, tailored to the visual emotional content for the therapist to continue the conversation.
   agent: imageTherapist
 
 
@@ -25,7 +25,7 @@ cognitive_reframing_task:
   description: >
     If text: {text} is empty, do nothing and note that in the feedback document.
     For non-empty text, analyze {text} to identify cognitive distortions and provide reframing suggestions:
-    1. Detect emotions and identify cognitive distortions using an emotion detection model.
+    1. Detect emotions and identify cognitive distortions.
     2. If emotions are positive, suggest continuing with small talk and do not apply reframing techniques.
     3. For negative emotions, follow these steps:
        a. Identify the situation or issue the user describes.
@@ -45,10 +45,10 @@ cognitive_reframing_task:
 
 audio_emotion_insight_task:
   description: >
-    Analyze the audio file at {audio_path}. If no path is provided, note this in the report and conclude the task. Otherwise, proceed with these steps:
+    Analyse the audio file at {audio_path}. If no path is provided, note this in the report and conclude the task. Otherwise, proceed with these steps:
     1. Transcribe the audio using the VoiceTranscriptionTool. Verify and correct transcription errors.
-    2. Analyze the transcription for emotional tone and cognitive distortions:
-       a. Identify the user’s described situation or issue, if evident.
+    2. Analyse the transcription for emotional tone and cognitive distortions:
+       a. Identify the situation or issue described by the user, if evident.
        b. Detect emotions and assess the overall tone.
     3. For negative emotions:
        a. Challenge negative thoughts: Are there more balanced or rational alternatives?
@@ -61,12 +61,12 @@ audio_emotion_insight_task:
     A structured feedback document:
     1. Transcription of the audio: {audio_path}.
     2. Emotional analysis: Identified cognitive distortions, emotional tone, and potential user issues.
-    3. Suggestions: Reframed interpretations and actionable recommendations for further discussion.
+    3. Suggestions: Reframed interpretations and actionable recommendations for further discussion for the therapist.
   agent: voiceTherapist
 
 
 
-conversation_task:
+multimodal_conversation_task:
   description: >
     Engage with the user to foster a meaningful and supportive conversation. Follow these steps:
     1. If the user introduces themselves, respond warmly and introduce yourself as well.
