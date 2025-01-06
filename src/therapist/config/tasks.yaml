@@ -69,15 +69,14 @@ audio_emotion_insight_task:
 multimodal_conversation_task:
   description: >
     Engage with the user to foster a meaningful and supportive conversation. Follow these steps:
-    1. If the user introduces themselves, respond warmly and introduce yourself as well.
-    2. Encourage small talk to build rapport and understand the user better.
-    3. Paraphrase the user’s statements to validate their emotions and show understanding.
-    4. Aggregate insights from multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).
-    5. Synthesize a holistic view of the user’s mental and emotional state, incorporating all relevant insights.
-    6. If negative thoughts are identified:
+    1. Encourage small talk to build rapport and understand the user better.
+    2. Paraphrase the user’s statements to validate their emotions and show understanding.
+    3. Aggregate insights from multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).
+    4. Synthesize a holistic view of the user’s mental and emotional state, incorporating all relevant insights.
+    5. If negative thoughts are identified:
        a. Apply reframing techniques suggested by other agents, if relevant.
        b. Provide a concise and constructive response to support the user’s emotional well-being.
-    7. Ensure responses are empathetic and concise (1–2 sentences) while addressing the user’s input.
+    6. Ensure responses are empathetic and concise (1–2 sentences) while addressing the user’s input.
   expected_output: >
     A supportive and concise response that reflects insights from user input and reframing suggestions, fostering a constructive and empathetic conversation.
     Aim for 1 to 2 sentences as an answer.
