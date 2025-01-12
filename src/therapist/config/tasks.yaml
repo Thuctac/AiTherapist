@@ -71,7 +71,7 @@ multimodal_conversation_task:
     Engage with the user to foster a meaningful and supportive conversation. Follow these steps:
     1. Encourage small talk to build rapport and understand the user better.
     2. Paraphrase the user’s statements to validate their emotions and show understanding.
-    3. Aggregate insights from multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).
+    3. Aggregate insights from the reports of the multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).
     4. Synthesize a holistic view of the user’s mental and emotional state, incorporating all relevant insights.
     5. If negative thoughts are identified:
        a. Apply reframing techniques suggested by other agents, if relevant.
