@@ -1,54 +1,120 @@
 # Therapist Crew
 
-Welcome to the Therapist Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the Therapist Crew project, a Bachelor Semester Project by Thuc Kevin Nguyen, powered by crewAI. This guide helps you set up a multi-agent AI system where multiple specialized “therapist” agents collaborate to provide text, image, and audio-based therapy insights. All of this is managed by the crewAI framework.
+
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Running the Project](#running-the-project)
+- [Naming Conversations](#naming-conversations)
+- [Understanding Your Crew](#understanding-your-crew)
+- [Project Code Overview](#project-code-overview)
+- [Support](#support)
+
+## Features
+- Multiple agents (Text, Image, and Voice Therapists) with specialized roles.
+- Modular tasks configured via YAML, each agent having unique goals and backstories.
+- Custom UI (`ui/chatWindow.py`) for user interaction.
+- Seamless generation and saving of conversation logs, with user-defined names.
+- Integrations for image and audio processing (`VisionTool`, `VoiceTranscriptionTool`).
 
 ## Installation
 
-Ensure you have Python >=3.10 <=3.13 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+### Python
+Ensure you have Python version `>=3.10` and `<=3.13` installed.
 
-First, if you haven't already, install uv:
-
+### Install Dependencies
+Install dependencies from the `requirements.txt` file:
 ```bash
-pip install uv
+pip install -r requirements.txt
 ```
 
-Next, navigate to your project directory and install the dependencies:
+### Environment Variables
+1. Create a `.env` file in your project root.
+2. Add your `OPENAI_API_KEY` (and any other API keys) inside this file:
+   ```bash
+   OPENAI_API_KEY=your_openai_key_here
+   GROQ_API_KEY=your_groq_key_here
+   ```
 
-(Optional) Lock the dependencies and install them by using the CLI command:
-```bash
-crewai install
-```
-### Customizing
+## Configuration
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+### Agents
+- Located in `src/therapist/config/agents.yaml`.
+- Each agent is described by a role, goal, and backstory (e.g., `imageTherapist`, `textTherapist`, etc.).
 
-- Modify `src/therapist/config/agents.yaml` to define your agents
-- Modify `src/therapist/config/tasks.yaml` to define your tasks
-- Modify `src/therapist/crew.py` to add your own logic, tools and specific args
-- Modify `src/therapist/main.py` to add custom inputs for your agents and tasks
+### Tasks
+- Located in `src/therapist/config/tasks.yaml`.
+- Each task references an agent and provides a description of how to handle user input.
+
+### Crew / Logic
+- Defined in `src/therapist/crew.py`.
+- Includes logic to wire up agents, tasks, memory, and custom tools like `VisionTool` and `VoiceTranscriptionTool`.
+
+### UI
+- The UI code (e.g., `ui/chatWindow.py`) manages the chat window, image/audio handling, conversation logs, and conversation naming.
+
+### Therapy Session
+- Located in `therapy.py`.
+- Contains the `TherapySession` class that orchestrates how user input is handled and passed to the crew.
 
 ## Running the Project
-
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
-
+From the root of your project, run:
 ```bash
-$ crewai run
+python3 src/therapist/main.py
 ```
+This launches your Therapist Crew, instantiating each agent and assigning tasks as defined in your YAML configurations. Any text, image, or audio provided through the UI or programmatic calls is processed by the relevant agent (`Text`, `Image`, or `Voice Therapists`). The final synthesis is done by the multimodal therapist.
 
-This command initializes the Therapist Crew, assembling the agents and assigning them tasks as defined in your configuration.
+By default, the sample tasks produce markdown reports in a `report/` folder (e.g., `ImageTherapist_report.md`, `TextTherapist_report.md`, `VoiceTherapist_report.md`) and an overall output `Output.md`.
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+## Naming Conversations
+- You can name your conversation when you start a new session.
+- If you load an older conversation, it uses that old name to save logs.
+- If you try to name a new conversation using an existing name, you’ll be prompted to choose a different one.
+- Each session has a unique log file, e.g.:
+  ```bash
+  log/YourConversationName.txt
+  ```
 
 ## Understanding Your Crew
+The Therapist Crew is composed of multiple AI agents:
 
-The Therapist Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+- **imageTherapist**: Analyzes images using `VisionTool`, providing emotional context and cognitive reframing suggestions.
+- **textTherapist**: Focuses on text-based input, identifying cognitive distortions and offering reframes.
+- **voiceTherapist**: Transcribes and analyzes audio recordings, detecting negative patterns or emotional cues.
+- **therapist**: Serves as the multimodal psychotherapist, synthesizing input from image, text, and audio to deliver holistic insights.
+
+These agents work on tasks such as:
+
+- `visual_context_recognition_task`
+- `cognitive_reframing_task`
+- `audio_emotion_insight_task`
+- `multimodal_conversation_task`
+
+`crewAI` coordinates these agents, passing them user inputs, and reassembling their outputs for an integrated therapy session.
+
+## Project Code Overview
+
+### Root Folder
+- **`README.md`**: This file, describing the project, setup, usage, etc.
+- **`.env`**: Contains environment variables like `OPENAI_API_KEY`.
+- **`crewai.yaml` or `pyproject.toml`**: Used for dependency locking.
+- **`report/`**: Where agents store result logs (`*.md`).
+
+### `src/therapist/`
+- **`config/agents.yaml`**: Agent definitions (e.g., `imageTherapist`, `textTherapist`, etc.).
+- **`config/tasks.yaml`**: Task definitions describing how each agent processes user data.
+- **`crew.py`**: The main `Crew` class tying agents and tasks together.
+- **`main.py`**: A script hooking custom inputs into the tasks.
+
+### `ui/`
+- **`chatWindow.py`**: Manages the graphical user interface (GUI), load/new conversations, image/audio attachments, and conversation logs.
+- Possibly other UI modules.
+
+### `therapy.py`
+- Contains the `TherapySession` class that integrates with your Therapist crew.
+- Defines how user input (text/image/audio) is passed to the crew and how to handle the results.
 
 ## Support
-
-For support, questions, or feedback regarding the Therapist Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+For any questions or issues, please open an issue in the repository or contact the project maintainers.
