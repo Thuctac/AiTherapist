@@ -4,6 +4,7 @@ import threading
 import warnings
 import wave
 import pyaudio
+import shutil
 from PIL import Image, ImageTk
 from tkinter import filedialog
 import customtkinter as ctk
@@ -51,7 +52,6 @@ class InputArea(ctk.CTkFrame):
         # Previews for attachments
         self.current_image = None
         self.preview_frame = None
-        self.audio_filename = None
         self.current_audio = None
         self.audio_preview_frame = None
 
@@ -90,7 +90,9 @@ class InputArea(ctk.CTkFrame):
     ################
     def attach_file(self):
         """
-        Opens a file dialog for image selection, then shows a preview frame.
+        Opens a file dialog for image selection, then copies the image 
+        into the "image" folder with a new name (image_<timestamp>.<ext>)
+        and shows a preview frame.
         """
         if self.current_image or self.master.waiting_response or self.is_recording:
             return
@@ -101,8 +103,24 @@ class InputArea(ctk.CTkFrame):
             filetypes=[("Image files", "*.png *.jpg *.jpeg *.gif *.bmp")]
         )
         if file_path:
+            # Create the "image" folder if it doesn't exist
+            image_folder = "image"
+            if not os.path.exists(image_folder):
+                os.makedirs(image_folder)
+
+            # Parse out the file extension
+            _, ext = os.path.splitext(file_path)
+            # Construct new name with timestamp
+            timestamp = int(time.time())
+            new_name = f"image_{timestamp}{ext}"
+            new_path = os.path.join(image_folder, new_name)
+
+            # Copy the file into the "image" folder with the new name
+            shutil.copy(file_path, new_path)
+
             self.attach_btn.configure(state="disabled")
-            self._show_image_preview(file_path)
+            # Use the new copied path for the preview
+            self._show_image_preview(new_path)
 
     def _show_image_preview(self, file_path):
         """
@@ -139,6 +157,19 @@ class InputArea(ctk.CTkFrame):
         self.current_image = file_path
 
     def _remove_image_preview(self):
+        """
+        1) Removes the image file from disk.
+        2) Calls _remove_image() to clear UI references.
+        3) Re-enables the attach button.
+        """
+        if self.current_image:
+            try:
+                os.remove(self.current_image)  # Delete the copied image file
+                print(f"Deleted image file: {self.current_image}")
+            except FileNotFoundError:
+                print("Image file not found. Could not delete.")
+            except PermissionError:
+                print("Permission denied. Could not delete the image file.")
 
         self._remove_image()
         self.attach_btn.configure(state="normal")
@@ -184,7 +215,7 @@ class InputArea(ctk.CTkFrame):
     def _record_audio(self):
         """
         Records audio from the microphone until stop_recording_flag is set,
-        then saves the audio to a .wav file.
+        then saves the audio to a .wav file in an "audio" folder.
         """
         chunk = 1024
         sample_format = pyaudio.paInt16
@@ -206,19 +237,22 @@ class InputArea(ctk.CTkFrame):
         stream.close()
         p.terminate()
 
-        timestamp = int(time.time())
-        folder_name = "recording"
-        self.audio_filename = os.path.join(folder_name, f"recording_{timestamp}.wav")
+        audio_folder = "audio"
+        if not os.path.exists(audio_folder):
+            os.makedirs(audio_folder)
 
-        wf = wave.open(self.audio_filename, 'wb')
+        timestamp = int(time.time())
+        audio_filename = os.path.join(audio_folder, f"recording_{timestamp}.wav")
+
+        wf = wave.open(audio_filename, 'wb')
         wf.setnchannels(channels)
         wf.setsampwidth(p.get_sample_size(sample_format))
         wf.setframerate(fs)
         wf.writeframes(b''.join(frames))
         wf.close()
 
-        print(f"Recording saved as {self.audio_filename}")
-        self._show_audio_preview(self.audio_filename)
+        print(f"Recording saved as {audio_filename}")
+        self._show_audio_preview(audio_filename)
 
     def _show_audio_preview(self, audio_path):
         """
@@ -247,11 +281,22 @@ class InputArea(ctk.CTkFrame):
         self.current_audio = audio_path
 
     def _remove_audio_preview(self):
+        """
+        1) Removes the audio file from disk.
+        2) Calls _remove_audio() to clear UI references.
+        3) Re-enables the record button.
+        """
+        if self.current_audio:
+            try:
+                os.remove(self.current_audio)
+                print(f"Deleted audio file: {self.current_audio}")
+            except FileNotFoundError:
+                print("Audio file not found. Could not delete.")
+            except PermissionError:
+                print("Permission denied. Could not delete the audio file.")
 
         self._remove_audio()
-        os.remove(self.audio_filename)
         self.record_btn.configure(state="normal")
-
 
     def _remove_audio(self):
         """

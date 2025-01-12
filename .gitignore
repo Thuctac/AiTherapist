@@ -9,4 +9,5 @@ src/therapist/.DS_Store
 uv.lock
 log/
 report/
-recording
+audio/
+image/

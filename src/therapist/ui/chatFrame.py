@@ -14,6 +14,7 @@ class ChatFrame(ctk.CTkScrollableFrame):
     def __init__(self, master):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
+        self._is_playing_audio = False
 
     def _add_image_to_message(self, frame, image_path, row):
         """
@@ -49,8 +50,18 @@ class ChatFrame(ctk.CTkScrollableFrame):
 
     def _play_audio(self, audio_path):
         """
-        Spawns a thread to play the audio file to avoid blocking the UI.
+        Called when the user presses the "Play" button.
+        If audio is already playing, we ignore this request.
+        Otherwise, start a new thread to play the audio.
         """
+        if self._is_playing_audio:
+            print("Already playing an audio clip. Please wait until it finishes.")
+            return  # Ignore subsequent play attempts
+
+        # Mark that we're playing audio
+        self._is_playing_audio = True
+        print(f"Playing '{audio_path}'")
+        # Spawn a thread to handle the actual playback
         threading.Thread(
             target=self._play_audio_in_thread,
             args=(audio_path,),
@@ -83,3 +94,7 @@ class ChatFrame(ctk.CTkScrollableFrame):
 
         except Exception as e:
             print(f"Error playing audio: {e}")
+
+        finally:
+            # When playback is finished (or an error occurs), release the flag
+            self._is_playing_audio = False
