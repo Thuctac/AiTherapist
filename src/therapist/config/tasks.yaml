@@ -2,6 +2,9 @@ visual_context_recognition_task:
   description: >
     Analyze the image at the provided path: {image}. If no `image_path` is provided, note this in the report and conclude the task. Otherwise, follow these steps:
     1. Provide a detailed description of the content in the image.
+       a. The input is an image created or selected by an individual, potentially reflecting their thoughts, emotions, or experiences. 
+       b. The image may include abstract patterns, specific objects, or symbolic elements. 
+       c. Pay attention to features such as colors,  , and recurring patterns, as these may p.
     2. Analyze the visual elements for emotional content:
        a. Identify emotions conveyed by key features in the image.
        b. Assess the overall emotional tone (e.g., positive, negative, neutral).
@@ -14,7 +17,7 @@ visual_context_recognition_task:
        e. Use gratitude reframing or humor if suitable.
     5. Encourage reflection: How might this analysis help the user perceive their situation differently?
   expected_output: >
-    A structured report:
+    A structured feedback document:
     1. Detailed description of the image.
     2. Emotional analysis, including insights into user-related context, if any.
     3. Suggestions for reframing techniques, tailored to the visual emotional content for the therapist to continue the conversation.
@@ -68,7 +71,10 @@ audio_emotion_insight_task:
 
 multimodal_conversation_task:
   description: >
-    Engage with the user to foster a meaningful and supportive conversation. Follow these steps:
+    Consider the conversation history: {history}
+    You use the textTherapist, imageTherapist, voiceTherapist based on the provided input if needed
+    Look at all the reports of those agents and understand the text input, the voice transcription and the image description.
+    Engage with the user to foster a meaningful and supportive conversation based on the provided input. Follow these steps:
     1. Encourage small talk to build rapport and understand the user better.
     2. Paraphrase the user’s statements to validate their emotions and show understanding.
     3. Aggregate insights from the reports of the multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).

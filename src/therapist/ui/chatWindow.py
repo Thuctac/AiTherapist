@@ -23,27 +23,20 @@ class ChatWindow(ctk.CTk):
     def __init__(self, therapy, **kwargs):
         super().__init__(**kwargs)
 
-        # Immediately hide the main window so user cannot see it
         self.withdraw()
 
         self.therapy = therapy
         self.title("AI Therapist")
 
-        # We'll explicitly set geometry & center it once we deiconify
-        # (or you can keep geometry here if you want)
-        # self.geometry("600x800")  # we can do this after deiconify
-
         ctk.set_appearance_mode("dark")
 
         # Folders
-        self._setup_recording_folder()
         self._setup_log_folder()
 
-        # Conversation state
         self.therapist_name = "Kevin"
         self.conversation_log = []
         self.waiting_response = False
-        self.conversation_name = None  # Will store the conversation’s “title”
+        self.conversation_name = None
 
         self.welcome_messages = [
             f"Hi, I’m {self.therapist_name}. Before we begin, tell me a little about yourself — what’s on your mind today?",
@@ -61,14 +54,9 @@ class ChatWindow(ctk.CTk):
         # Window close
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
-    ############################################################################
-    # Folder / Utility Setup
-    ############################################################################
-
-    def _setup_recording_folder(self):
-        folder_name = "recording"
-        if not os.path.exists(folder_name):
-            os.makedirs(folder_name)
+    ##########################
+    # Folder / Utility Setup #
+    ##########################
 
     def _setup_log_folder(self):
         log_folder = "log"
@@ -98,9 +86,9 @@ class ChatWindow(ctk.CTk):
         y = (screen_h // 2) - (h // 2)
         win.geometry(f"{w}x{h}+{x}+{y}")
 
-    ############################################################################
-    # GUI Setup
-    ############################################################################
+    #############
+    # GUI Setup #
+    #############
 
     def _setup_grid(self):
         self.grid_columnconfigure(0, weight=1)
@@ -129,9 +117,9 @@ class ChatWindow(ctk.CTk):
             return "break"
         return None
 
-    ############################################################################
-    # Send/Receive Logic
-    ############################################################################
+    ######################
+    # Send/Receive Logic #
+    ######################
 
     def send_message(self):
         if self.waiting_response:
@@ -229,9 +217,9 @@ class ChatWindow(ctk.CTk):
             lines.append(f"[{sender}] {msg}")
         return "\n".join(lines)
 
-    ############################################################################
-    # Save / Close
-    ############################################################################
+    ################
+    # Save / Close #
+    ################
 
     def _on_close(self):
         try:
@@ -262,22 +250,20 @@ class ChatWindow(ctk.CTk):
 
         print(f"Conversation log saved to {log_filename}")
 
-    ############################################################################
-    # Loading Old Conversation
-    ############################################################################
+    ############################
+    # Loading Old Conversation #
+    ############################
 
     def _load_previous_conversation(self, log_path):
         """
         Parse the .txt file for text, [image path: ...], [audio path: ...].
         We do not show the main window until AFTER the user picks a file.
         """
-        # Clear existing chat
         self.chat_frame.destroy()
         self.chat_frame = ChatFrame(self)
         self.chat_frame.grid(row=1, column=0, padx=20, pady=(0, 10), sticky="nsew")
         self.conversation_log.clear()
 
-        # conversation name from file
         base = os.path.basename(log_path)
         just_name, _ext = os.path.splitext(base)
         self.conversation_name = just_name
@@ -340,13 +326,12 @@ class ChatWindow(ctk.CTk):
             print(f"Error loading conversation: {e}")
             return
 
-        # Now that the old conversation is fully loaded, show the main window
         self.deiconify()
-        self._center_window()  # center it
+        self._center_window()
 
-    ############################################################################
-    # Modal Flow: Choose Load or New
-    ############################################################################
+    ##################################
+    # Modal Flow: Choose Load or New #
+    ##################################
 
     def _ask_load_or_new(self):
         """
@@ -419,9 +404,9 @@ class ChatWindow(ctk.CTk):
         load_win.grab_set()
         load_win.lift()
 
-    ############################################################################
-    # New Conversation Name Flow
-    ############################################################################
+    ##############################
+    # New Conversation Name Flow #
+    ##############################
 
     def _ask_for_conversation_name(self):
         """
@@ -457,7 +442,6 @@ class ChatWindow(ctk.CTk):
             self.conversation_name = proposed_name
             name_win.destroy()
 
-            # Start new conversation & show the window
             self._start_new_convo()
 
             self.deiconify()
@@ -470,7 +454,7 @@ class ChatWindow(ctk.CTk):
             name_win, text="Cancel",
             command=lambda: [
                 name_win.destroy(),
-                self._start_new_convo(),  # fallback => no explicit name
+                self._start_new_convo(),
                 self.deiconify(),
                 self._center_window()
             ]
@@ -484,7 +468,6 @@ class ChatWindow(ctk.CTk):
         """
         Show a welcome message for a fresh conversation.
         """
-        # Clear existing chat if any
         self.chat_frame.destroy()
         self.chat_frame = ChatFrame(self)
         self.chat_frame.grid(row=1, column=0, padx=20, pady=(0, 10), sticky="nsew")

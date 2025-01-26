@@ -96,5 +96,4 @@ class ChatFrame(ctk.CTkScrollableFrame):
             print(f"Error playing audio: {e}")
 
         finally:
-            # When playback is finished (or an error occurs), release the flag
             self._is_playing_audio = False
