@@ -23,7 +23,6 @@ visual_context_recognition_task:
     3. Suggestions for reframing techniques, tailored to the visual emotional content for the therapist to continue the conversation.
   agent: imageTherapist
 
-
 cognitive_reframing_task:
   description: >
     If text: {text} is empty, do nothing and note that in the feedback document.
@@ -44,7 +43,6 @@ cognitive_reframing_task:
     2. Analysis: Identified cognitive distortions, emotional state, and tone of the user.
     3. Suggestions: Reframed thoughts and actionable recommendations for the therapist to continue the conversation.
   agent: textTherapist
-
 
 audio_emotion_insight_task:
   description: >
@@ -67,8 +65,6 @@ audio_emotion_insight_task:
     3. Suggestions: Reframed interpretations and actionable recommendations for further discussion for the therapist.
   agent: voiceTherapist
 
-
-
 multimodal_conversation_task:
   description: >
     Consider the conversation history: {history}
@@ -87,4 +83,3 @@ multimodal_conversation_task:
     A supportive and concise response that reflects insights from user input and reframing suggestions, fostering a constructive and empathetic conversation.
     Aim for 1 to 2 sentences as an answer.
   agent: therapist
-
