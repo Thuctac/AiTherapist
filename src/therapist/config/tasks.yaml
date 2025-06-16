@@ -50,16 +50,16 @@ audio_emotion_insight_task:
   description: >
     Analyse the audio file at {audio_path}. If no path is provided, note this in the report and conclude the task. Otherwise, proceed with these steps:
     1. Transcribe the audio using the VoiceTranscriptionTool. Verify and correct transcription errors.
-    2. Analyse the transcription for emotional tone and cognitive distortions:
+    2. Detect emotions and assess the overall tone using the SERTool.
+    3. Analyse the transcription for emotional tone and cognitive distortions:
        a. Identify the situation or issue described by the user, if evident.
-       b. Detect emotions and assess the overall tone.
-    3. For negative emotions:
+    4. For negative emotions:
        a. Challenge negative thoughts: Are there more balanced or rational alternatives?
        b. Encourage perspective shifts: How might others view the same situation?
        c. Reframe unhelpful thoughts into constructive interpretations, highlighting growth opportunities.
        d. Reduce perceived severity by exploring realistic outcomes and coping mechanisms.
        e. Suggest gratitude reframing or humor where suitable.
-    4. Conclude with reflective prompts to encourage the user’s engagement with the reframed insights.
+    5. Conclude with reflective prompts to encourage the user’s engagement with the reframed insights.
   expected_output: >
     A structured feedback document:
     1. Transcription of the audio: {audio_path}.

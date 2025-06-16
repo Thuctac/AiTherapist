@@ -2,6 +2,7 @@ from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import VisionTool
 from tools.voice_transcription_tool import VoiceTranscriptionTool
+from tools.ser_tool import SERTool
 
 # If you want to run a snippet of code before or after the crew starts, 
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -21,6 +22,7 @@ class Therapist():
 	# https://docs.crewai.com/concepts/agents#agent-tools
 	vision_tool = VisionTool()
 	voice_tool = VoiceTranscriptionTool()
+	ser_tool = SERTool()
 
 	@agent
 	def imageTherapist(self) -> Agent:
@@ -41,7 +43,7 @@ class Therapist():
 	def voiceTherapist(self) -> Agent:
 		return Agent(
 			config=self.agents_config['voiceTherapist'],
-			tools = [self.voice_tool],
+			tools = [self.voice_tool, self.ser_tool],
 			verbose = True,
 		)
 	

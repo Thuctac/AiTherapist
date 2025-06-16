@@ -6,6 +6,7 @@ __pycache__/
 .DS_Store
 src/.DS_Store
 src/therapist/.DS_Store
+src/.DS_Store
 uv.lock
 log/
 report/
