@@ -1,4 +1,4 @@
-from crew import Therapist
+from .crew import Therapist
 
 class TherapySession:
     def __init__(self):

@@ -1,8 +1,8 @@
 from crewai import Agent, Crew, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import VisionTool
-from tools.voice_transcription_tool import VoiceTranscriptionTool
-from tools.ser_tool import SERTool
+from .tools.voice_transcription_tool import VoiceTranscriptionTool
+from .tools.ser_tool import SERTool
 
 @CrewBase
 class Therapist():
@@ -93,7 +93,6 @@ class Therapist():
 
     def crew(self) -> Crew:
         """Creates the Therapist crew"""
-        # Only include the final synchronous task in the crew tasks list
         agents = [self.therapist()]
         tasks = []
 

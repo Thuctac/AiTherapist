@@ -1,0 +1,84 @@
+visual_context_recognition_task:
+  description: >
+    Analyze the image at the provided path: {image}. Follow these steps:
+    1. Provide a detailed description of the content in the image.
+       a. The input is an image created or selected by an individual, potentially reflecting their thoughts, emotions, or experiences. 
+       b. The image may include abstract patterns, specific objects, or symbolic elements. 
+       c. Pay attention to features such as colors,  , and recurring patterns, as these may p.
+    2. Analyze the visual elements for emotional content:
+       a. Identify emotions conveyed by key features in the image.
+       b. Assess the overall emotional tone (e.g., positive, negative, neutral).
+    3. If a specific user situation or issue is given, relate the emotional analysis to it.
+    4. Suggest possible reframing techniques:
+       a. Question the validity of any inferred negative thoughts.
+       b. Explore alternative perspectives and broader contexts.
+       c. Reframe unhelpful interpretations into balanced and constructive ones.
+       d. Identify potential lessons or opportunities from the image's emotional cues.
+       e. Use gratitude reframing or humor if suitable.
+    5. Encourage reflection: How might this analysis help the user perceive their situation differently?
+  expected_output: >
+    A structured feedback document:
+    1. Detailed description of the image.
+    2. Emotional analysis, including insights into user-related context, if any.
+    3. Suggestions for reframing techniques, tailored to the visual emotional content for the therapist to continue the conversation.
+  agent: imageTherapist
+
+cognitive_reframing_task:
+  description: >
+    Analyze {text} to identify cognitive distortions and provide reframing suggestions:
+    1. Detect emotions and identify cognitive distortions.
+    2. If emotions are positive, suggest continuing with small talk and do not apply reframing techniques.
+    3. For negative emotions, follow these steps:
+       a. Identify the situation or issue the user describes.
+       b. Question the validity of negative thoughts: Are there alternative, more balanced perspectives?
+       c. Shift perspectives: How might someone else view this situation? Consider the broader context.
+       d. Reframe the user's thoughts into constructive and balanced ones. Highlight potential lessons or opportunities.
+       e. Reduce perceived severity: What’s the realistic impact, and how could it be managed?
+       f. Apply gratitude or humor to lighten the perspective.
+    4. Encourage reflection: Does the user find the reframing constructive? Are there other thoughts to explore?
+  expected_output: >
+    A structured feedback document:
+    1. Original text: {text}.
+    2. Analysis: Identified cognitive distortions, emotional state, and tone of the user.
+    3. Suggestions: Reframed thoughts and actionable recommendations for the therapist to continue the conversation.
+  agent: textTherapist
+
+audio_emotion_insight_task:
+  description: >
+    Analyze the audio file at {audio_path}. Proceed with these steps:
+    1. Transcribe the audio using the VoiceTranscriptionTool. Verify and correct transcription errors.
+    2. Detect emotions and assess the overall tone using the SERTool.
+    3. Analyse the transcription for emotional tone and cognitive distortions:
+       a. Identify the situation or issue described by the user, if evident.
+    4. For negative emotions:
+       a. Challenge negative thoughts: Are there more balanced or rational alternatives?
+       b. Encourage perspective shifts: How might others view the same situation?
+       c. Reframe unhelpful thoughts into constructive interpretations, highlighting growth opportunities.
+       d. Reduce perceived severity by exploring realistic outcomes and coping mechanisms.
+       e. Suggest gratitude reframing or humor where suitable.
+    5. Conclude with reflective prompts to encourage the user’s engagement with the reframed insights.
+  expected_output: >
+    A structured feedback document:
+    1. Transcription of the audio: {audio_path}.
+    2. Emotional analysis: Identified cognitive distortions, emotional tone, and potential user issues.
+    3. Suggestions: Reframed interpretations and actionable recommendations for further discussion for the therapist.
+  agent: voiceTherapist
+
+multimodal_conversation_task:
+  description: >
+    Consider the conversation history: {history}
+    You use the textTherapist, imageTherapist, voiceTherapist based on the provided input if needed
+    Look at all the reports of those agents and understand the text input, the voice transcription and the image description.
+    Engage with the user to foster a meaningful and supportive conversation based on the provided input. Follow these steps:
+    1. Encourage small talk to build rapport and understand the user better.
+    2. Paraphrase the user’s statements to validate their emotions and show understanding.
+    3. Aggregate insights from the reports of the multiple agents if provided (e.g., textTherapist, imageTherapist, voiceTherapist).
+    4. Synthesize a holistic view of the user’s mental and emotional state, incorporating all relevant insights.
+    5. If negative thoughts are identified:
+       a. Apply reframing techniques suggested by other agents, if relevant.
+       b. Provide a concise and constructive response to support the user’s emotional well-being.
+    6. Ensure responses are empathetic and concise (1–2 sentences) while addressing the user’s input.
+  expected_output: >
+    A supportive and concise response that reflects insights from user input and reframing suggestions, fostering a constructive and empathetic conversation.
+    Aim for 1 to 2 sentences as an answer.
+  agent: therapist

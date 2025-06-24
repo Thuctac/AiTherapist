@@ -1,0 +1,208 @@
+openapi: 3.0.0
+info:
+  title: AITherapist API
+  description: |
+    REST API for sending user messages (text, voice, image) to the AITherapist back end
+    and receiving an AI-generated text+audio reply asynchronously.
+  version: 1.0.0
+servers:
+- url: http://localhost:5000/api
+  description: Local development server
+paths:
+  /messages:
+    post:
+      summary: Submit a new user message for AI processing
+      description: |
+        Send a message with at least one modality (text, voice, image).
+        Returns immediately with a messageId to poll for the result.
+      operationId: messages_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/MessageRequest"
+        required: true
+      responses:
+        "202":
+          description: Accepted for processing
+          headers:
+            Location:
+              description: URL to poll for the processing result
+              style: simple
+              explode: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/inline_response_202"
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /messages/{messageId}:
+    get:
+      summary: Poll the status or result of a previously submitted message
+      operationId: messages_message_id_get
+      parameters:
+      - name: messageId
+        in: path
+        description: ID returned by POST /messages
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Current processing state or final result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageStatus"
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+  /conversations/{conversationId}/messages:
+    get:
+      summary: List all stored messages in a conversation
+      operationId: conversations_conversation_id_messages_get
+      parameters:
+      - name: conversationId
+        in: path
+        description: Unique identifier of the conversation
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Array of all messages in the conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StoredMessage"
+                x-content-type: application/json
+      x-openapi-router-controller: swagger_server.controllers.default_controller
+components:
+  schemas:
+    MessageRequest:
+      required:
+      - conversationId
+      - timestamp
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier of the user
+        conversationId:
+          type: string
+          description: Unique identifier of the conversation
+        timestamp:
+          type: string
+          description: ISO-8601 timestamp of when the message was sent
+          format: date-time
+        text:
+          type: string
+          description: Plain text message
+        voice:
+          type: string
+          description: "Audio file (e.g., WAV or MP3)"
+          format: binary
+        image:
+          type: string
+          description: "Image file (e.g., JPEG or PNG)"
+          format: binary
+      description: |
+        At least one of `text`, `voice`, or `image` must be provided.
+    MessageStatus:
+      required:
+      - messageId
+      - state
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Identifier of the processed message
+        state:
+          type: string
+          description: Current processing state
+          enum:
+          - processing
+          - done
+        responseText:
+          type: string
+          description: AI-generated response text (only when `state` is `done`)
+          nullable: true
+        responseAudio:
+          type: string
+          description: Base64-encoded AI response audio (only when `state` is `done`)
+          format: byte
+          nullable: true
+      description: Status or result of an asynchronous message processing request
+      example:
+        responseText: responseText
+        messageId: messageId
+        state: processing
+        responseAudio: ""
+    StoredMessage:
+      required:
+      - conversationId
+      - direction
+      - messageId
+      - timestamp
+      - userId
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Unique message identifier
+        userId:
+          type: string
+          description: ID of the user who sent (or received) the message
+        conversationId:
+          type: string
+          description: ID of the conversation
+        timestamp:
+          type: string
+          description: When the message was sent
+          format: date-time
+        text:
+          type: string
+          description: "Text content, if any"
+          nullable: true
+        voiceUrl:
+          type: string
+          description: Public URL to the stored audio file
+          format: uri
+          nullable: true
+        imageUrl:
+          type: string
+          description: Public URL to the stored image file
+          format: uri
+          nullable: true
+        direction:
+          type: string
+          description: Indicates whether the message was sent by the user or generated
+            by the bot
+          enum:
+          - user
+          - bot
+      description: A message (user or bot) stored in a conversation history
+      example:
+        voiceUrl: http://example.com/aeiou
+        conversationId: conversationId
+        imageUrl: http://example.com/aeiou
+        messageId: messageId
+        text: text
+        userId: userId
+        timestamp: 2000-01-23T04:56:07.000+00:00
+        direction: user
+    inline_response_202:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Identifier for polling the result
+      example:
+        messageId: messageId
+

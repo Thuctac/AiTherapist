@@ -10,21 +10,28 @@ from peft import PeftModel
 import json
 import librosa
 
-# --- configure these to match your setup ---
-OUTPUT_DIR = "/full/path/to/your/fine_tuned_whisper-base"
-# The exact labels/order you used during training:
+BASE_DIR = os.path.dirname(__file__)  
+
+OUTPUT_DIR = os.path.join(BASE_DIR, "fine_tuned_whisper-base")
+
+
 LABELS = ["neutral", "happy", "sad", "angry", "fearful", "disgust", "surprised", "calm"]
 
-# --- module-level globals for caching ---
+
 _model = None
 _processor = None
+
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cpu")
 
 def _load_ser_model():
     global _model, _processor
     if _model is None:
-        # 1) load base encoder
         base = WhisperModel.from_pretrained("openai/whisper-base")
-        # 2) wrap in SER head
         num_labels = len(LABELS)
         class WhisperSERModel(torch.nn.Module):
             def __init__(self, encoder, num_labels):
@@ -49,6 +56,8 @@ def _load_ser_model():
         # 3) attach LoRA adapters
         ser = PeftModel.from_pretrained(ser, OUTPUT_DIR, local_files_only=True)
         ser.eval()
+        # move model to selected device
+        ser.to(device)
 
         # 4) inject id2label/label2id
         ser.config.id2label = {i: label for i, label in enumerate(LABELS)}
@@ -61,10 +70,6 @@ def _load_ser_model():
     return _model, _processor
 
 def detectEmotion(audio_file_path: str) -> str:
-    """
-    Load the audio, resample if needed, run SER model, and return
-    a JSON string mapping each emotion label to its percentage probability.
-    """
     model, processor = _load_ser_model()
 
     # read audio  
@@ -75,15 +80,16 @@ def detectEmotion(audio_file_path: str) -> str:
 
     # preprocess
     inputs = processor(audio, sampling_rate=sr, return_tensors="pt")
-    input_values = inputs.input_features  # raw Whisper features
+    # move inputs to the same device as the model
+    input_values = inputs.input_features.to(device)
 
     # forward + softmax
     with torch.no_grad():
         logits = model(input_values=input_values)
-        probs = F.softmax(logits, dim=-1)[0]
+        probs = torch.nn.functional.softmax(logits, dim=-1)[0].cpu()
 
     # build full distribution
-    label_probs = { 
+    label_probs = {
         model.config.id2label[i]: round(probs[i].item() * 100, 1)
         for i in range(probs.shape[0])
     }

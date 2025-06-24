@@ -1,0 +1,12 @@
+crewai
+crewai-tools
+langchain-community
+transformers
+accelerate
+peft
+soundfile
+librosa
+connexion
+swagger_ui_bundle
+connexion[swagger-ui]
+setuptools
