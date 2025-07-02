@@ -1,8 +1,20 @@
-from crewai import Agent, Crew, Task
+from crewai import Agent, Crew, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai_tools import VisionTool
 from .tools.voice_transcription_tool import VoiceTranscriptionTool
 from .tools.ser_tool import SERTool
+import os
+
+ollama_host = os.getenv('OLLAMA_HOST', 'host.docker.internal:11434')
+
+base_url = f"http://{ollama_host}"
+
+therapistllm = LLM(
+    model="ollama/therapist-llm:latest",
+    base_url=base_url,
+    temperature=0.3,
+    timeout=60,
+)
 
 @CrewBase
 class Therapist():
@@ -14,6 +26,7 @@ class Therapist():
     vision_tool = VisionTool()
     voice_tool = VoiceTranscriptionTool()
     ser_tool = SERTool()
+
 
     def __init__(self, text_provided=False, audio_provided=False, image_provided=False):
         self.enable_text_agent = text_provided
@@ -33,6 +46,7 @@ class Therapist():
         return Agent(
             config=self.agents_config['textTherapist'],
             verbose=True,
+            
         )
 
     @agent
@@ -49,29 +63,30 @@ class Therapist():
             config=self.agents_config['therapist'],
             memory=True,
             verbose=True,
+            llm=therapistllm
         )
 
     @task
-    def visual_context_recognition_task(self) -> Task:
+    def image_analysis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['visual_context_recognition_task'],
-            output_file='report/ImageTherapist_report.md',
+            config=self.tasks_config['image_analysis_task'],
+            output_file='report/image_report.md',
             async_execution=True,
         )
 
     @task
-    def cognitive_reframing_task(self) -> Task:
+    def text_analysis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['cognitive_reframing_task'],
-            output_file='report/TextTherapist_report.md',
+            config=self.tasks_config['text_analysis_task'],
+            output_file='report/text_report.md',
             async_execution=True,
         )
 
     @task
-    def audio_emotion_insight_task(self) -> Task:
+    def voice_analysis_task(self) -> Task:
         return Task(
-            config=self.tasks_config['audio_emotion_insight_task'],
-            output_file='report/VoiceTherapist_report.md',
+            config=self.tasks_config['voice_analysis_task'],
+            output_file='report/audio_report.md',
             async_execution=True,
         )
 
@@ -79,15 +94,14 @@ class Therapist():
     def multimodal_conversation_task(self) -> Task:
         context = []
         if self.enable_audio_agent:
-            context.append(self.audio_emotion_insight_task())
+            context.append(self.voice_analysis_task())
         if self.enable_image_agent:
-            context.append(self.visual_context_recognition_task())
+            context.append(self.image_analysis_task())
         if self.enable_text_agent:
-            context.append(self.cognitive_reframing_task())
+            context.append(self.text_analysis_task())
         return Task(
-            config=self.tasks_config['multimodal_conversation_task'],
+            config=self.tasks_config['conversation_task'],
             context=context,
-            output_file='report/Output.md',
             async_execution=False,
         )
 
@@ -98,13 +112,13 @@ class Therapist():
 
         if self.enable_audio_agent:
             agents.append(self.voiceTherapist())
-            tasks.append(self.audio_emotion_insight_task())
+            tasks.append(self.voice_analysis_task())
         if self.enable_image_agent:
             agents.append(self.imageTherapist())
-            tasks.append(self.visual_context_recognition_task())
+            tasks.append(self.image_analysis_task())
         if self.enable_text_agent:
             agents.append(self.textTherapist())
-            tasks.append(self.cognitive_reframing_task())
+            tasks.append(self.text_analysis_task())
             
         tasks.append(self.multimodal_conversation_task())
         

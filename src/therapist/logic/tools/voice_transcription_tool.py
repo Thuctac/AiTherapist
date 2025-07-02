@@ -31,8 +31,7 @@ def transcribe_audio(audio_file_path):
         # If you set response_format="text", `result` is a plain string
         return result
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
+        raise RuntimeError(f"VoiceTranscriptionTool failed: {e}") from e
 
 
 
