@@ -20,10 +20,10 @@ REQUIRES = [
 setup(
     name=NAME,
     version=VERSION,
-    description="AITherapist API",
+    description="Chat API",
     author_email="",
     url="",
-    keywords=["Swagger", "AITherapist API"],
+    keywords=["Swagger", "Chat API"],
     install_requires=REQUIRES,
     packages=find_packages(),
     package_data={'': ['swagger/swagger.yaml']},
@@ -31,6 +31,6 @@ setup(
     entry_points={
         'console_scripts': ['swagger_server=swagger_server.__main__:main']},
     long_description="""\
-    REST API for sending user messages (text, voice, image) to the AITherapist back end and receiving an AI-generated text+audio reply asynchronously. 
+    Swagger/OpenAPI specification for Chat and Auth endpoints (text + mandatory audio)
     """
 )
