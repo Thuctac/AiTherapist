@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  therapist:
+    build:
+      context: ./therapist
+      dockerfile: Dockerfile
+    image: therapist:latest
+    container_name: therapist
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: unless-stopped
+    volumes:
+      - media:/media/uploads
+
+  therapistdb:
+    build:
+      context: ./therapistdb
+      dockerfile: Dockerfile
+    image: therapistdb:latest
+    container_name: therapistdb
+    env_file:
+      - .env
+    depends_on:
+      - db
+    restart: "on-failure"
+
+  db:
+    image: postgres:17.5-alpine
+    container_name: chat_db
+    env_file:
+      - .env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  media:
