@@ -1,5 +1,5 @@
 import { useChatStore } from "../store/useChatStore";
-import ChatContainer from "../components/ChatContainerTest";
+import ChatContainer from "../components/ChatContainer";
 
 const HomePage = () => {
   return (
