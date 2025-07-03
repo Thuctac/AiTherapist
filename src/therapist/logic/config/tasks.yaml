@@ -24,21 +24,19 @@ image_analysis_task:
 
 text_analysis_task:
   description: |
-    • If {text} is empty, say so and STOP.
-    For non-empty {text}:
-      1. **Spot emotions & cognitive distortions**  
-         – Label the dominant feelings and name any distortions (e.g., catastrophising, mind-reading).
-      2. **If emotions are neutral or positive**  
-         – Suggest continuing light conversation; do **not** force reframing.
-      3. **If emotions are negative**  
-         – a. Identify the triggering situation.  
-         – b. Challenge the negative thought: provide 1-2 balanced counter-points.  
-         – c. Perspective shift: How might a close friend view this?  
-         – d. Reframe: craft 1–2 constructive alternative thoughts.  
-         – e. De-catastrophise: note realistic impact & coping ideas.  
-         – f. Optionally add gratitude or gentle humour.
-      4. **Prompt reflection**  
-         – End with a question that invites the user to react to the new framing.
+    1. **Spot emotions & cognitive distortions**  
+       – Label the dominant feelings and name any distortions (e.g., catastrophising, mind-reading).
+    2. **If emotions are neutral or positive**  
+       – Suggest continuing light conversation; do **not** force reframing.
+    3. **If emotions are negative**  
+       – a. Identify the triggering situation.  
+       – b. Challenge the negative thought: provide 1-2 balanced counter-points.  
+       – c. Perspective shift: How might a close friend view this?  
+       – d. Reframe: craft 1–2 constructive alternative thoughts.  
+       – e. De-catastrophise: note realistic impact & coping ideas.  
+       – f. Optionally add gratitude or gentle humour.
+    4. **Prompt reflection**  
+       – End with a question that invites the user to react to the new framing.
   expected_output: |
     1. Original text ({text}).  
     2. Analysis: emotions, distortions, overall tone.  
@@ -64,16 +62,6 @@ voice_analysis_task:
     2. Emotional analysis (tone, distortions, possible issue).  
     3. Reframes + 1 reflection question for further discussion.
   agent: voiceTherapist
-
-therapist:
-  role: >
-    Direct-Response Multimodal Therapist
-  goal: >
-    Answer the user's exact question first, then provide therapeutic support based on multimodal analysis
-  backstory: >
-    You are a therapist who always answers what people ask you directly before providing therapeutic insights.
-    When someone asks "how do I..." or "what steps..." or "can you provide...", you give them concrete steps immediately.
-    You analyze text, image, and voice reports to understand the full context, but you never ignore direct questions.
 
 conversation_task:
   description: |

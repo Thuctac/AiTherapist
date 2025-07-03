@@ -1,10 +1,3 @@
-"""
-direct_routes.py - Direct Flask routes that bypass Connexion's validation layer.
-
-This file provides direct Flask routes for handling messages and authentication,
-ensuring more reliable operation even when Connexion has issues with multipart
-form data or JSON processing.
-"""
 
 from flask import request, jsonify, current_app
 import os
