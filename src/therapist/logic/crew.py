@@ -107,7 +107,7 @@ class Therapist():
 
     def crew(self) -> Crew:
         """Creates the Therapist crew"""
-        agents = [self.therapist()]
+        agents = []
         tasks = []
 
         if self.enable_audio_agent:
@@ -119,7 +119,8 @@ class Therapist():
         if self.enable_text_agent:
             agents.append(self.textTherapist())
             tasks.append(self.text_analysis_task())
-            
+        
+        agents.append(self.therapist())
         tasks.append(self.multimodal_conversation_task())
         
         return Crew(

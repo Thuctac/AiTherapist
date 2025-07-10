@@ -11,11 +11,31 @@ services:
       - "8080:8080"
     env_file:
       - .env
+    environment:
+      # Add timeout configurations
+      - CREWAI_TIMEOUT=120
+      - PYTORCH_ENABLE_MPS_FALLBACK=1
+      # Optimize PyTorch for CPU if no GPU
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
     depends_on:
       - db
     restart: unless-stopped
     volumes:
       - media:/media/uploads
+      # Cache models to avoid re-downloading
+      - model_cache:/root/.cache
+    # Resource limits and reservations
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
+        reservations:
+          cpus: "2"
+          memory: 4G
+    # Increase shared memory for PyTorch
+    shm_size: "2gb"
 
   therapistdb:
     build:
@@ -30,7 +50,7 @@ services:
     restart: "on-failure"
 
   db:
-    image: postgres:17.5-alpine
+    image: postgres:17.2-alpine
     container_name: chat_db
     env_file:
       - .env
@@ -50,3 +70,4 @@ services:
 volumes:
   db_data:
   media:
+  model_cache:

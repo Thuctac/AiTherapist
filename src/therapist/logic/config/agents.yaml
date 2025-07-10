@@ -1,6 +1,6 @@
 imageTherapist:
   role: >
-    Therapist with visual input specialization
+    Visual Context Recognition Specialist
   goal: >
     Efficiently analyse the provided image: {image_path} using AI-powered tools to extract visual emotional content and apply cognitive reframing techniques as needed.
   backstory: >
@@ -10,7 +10,7 @@ imageTherapist:
 
 textTherapist:
   role: >
-    Therapist with text input specialization
+    Cognitive Reframing Specialist
   goal: >
     Analyse the provided text: {text} to identify cognitive distortions, assess emotional tone, and apply cognitive reframing techniques to promote healthier thinking patterns.
   backstory: >
@@ -20,7 +20,7 @@ textTherapist:
 
 voiceTherapist:
   role: >
-    Therapist with audio input specialization
+    Audio Emotion Detection Specialist
   goal: >
     Use the VoiceTranscriptionTool to transcribe the audio at {audio_path}, assess the emotional tone of the transcription, and apply cognitive reframing techniques to identified issues.
   backstory: >

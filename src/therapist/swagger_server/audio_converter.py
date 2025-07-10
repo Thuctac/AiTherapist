@@ -1,9 +1,3 @@
-"""
-audio_converter.py
-
-Helper functions to save and convert audio uploads.
-"""
-
 import uuid
 import os
 from pathlib import Path

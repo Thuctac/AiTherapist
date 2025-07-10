@@ -24,19 +24,21 @@ image_analysis_task:
 
 text_analysis_task:
   description: |
-    1. **Spot emotions & cognitive distortions**  
-       – Label the dominant feelings and name any distortions (e.g., catastrophising, mind-reading).
-    2. **If emotions are neutral or positive**  
-       – Suggest continuing light conversation; do **not** force reframing.
-    3. **If emotions are negative**  
-       – a. Identify the triggering situation.  
-       – b. Challenge the negative thought: provide 1-2 balanced counter-points.  
-       – c. Perspective shift: How might a close friend view this?  
-       – d. Reframe: craft 1–2 constructive alternative thoughts.  
-       – e. De-catastrophise: note realistic impact & coping ideas.  
-       – f. Optionally add gratitude or gentle humour.
-    4. **Prompt reflection**  
-       – End with a question that invites the user to react to the new framing.
+    • If {text} is empty, say so and STOP.
+    For non-empty {text}:
+      1. **Spot emotions & cognitive distortions**  
+         – Label the dominant feelings and name any distortions (e.g., catastrophising, mind-reading).
+      2. **If emotions are neutral or positive**  
+         – Suggest continuing light conversation; do **not** force reframing.
+      3. **If emotions are negative**  
+         – a. Identify the triggering situation.  
+         – b. Challenge the negative thought: provide 1-2 balanced counter-points.  
+         – c. Perspective shift: How might a close friend view this?  
+         – d. Reframe: craft 1–2 constructive alternative thoughts.  
+         – e. De-catastrophise: note realistic impact & coping ideas.  
+         – f. Optionally add gratitude or gentle humour.
+      4. **Prompt reflection**  
+         – End with a question that invites the user to react to the new framing.
   expected_output: |
     1. Original text ({text}).  
     2. Analysis: emotions, distortions, overall tone.  
@@ -45,8 +47,7 @@ text_analysis_task:
 
 voice_analysis_task:
   description: |
-    Use each tool only once per audio file.
-    Do not retry the same audio multiple times.
+    Use the each tool only once per audio file.
     1. Transcribe the audio (VoiceTranscriptionTool) and fix obvious errors.  
     2. Detect emotional tone (SERTool).  
     3. Analyse the transcript for emotions & distortions; identify any described situation.
@@ -65,41 +66,50 @@ voice_analysis_task:
 
 conversation_task:
   description: |
-    1. READ the user's message. If it contains a question asking for steps, advice, or "how to" do something:
+    0. Consider the full conversation history as context, but give priority to the user’s most recent message.
+    IMPORTANT: Don't repeat advices that you have given in the conversation history already
+    1. READ the user's message. Wait until you received the reports of the textTherapist, imageTherapist, voiceTherapist
+    If it's a simple greeting, social chat, or casual conversation → respond naturally and briefly.
+    If it contains a question asking for steps, advice, or "how to" do something:
        - Answer their question with specific steps IMMEDIATELY
        - Do NOT start with validation or generic statements
        - Give them the practical information they asked for
-       IMPORTANT: Don't repeat advices that you have given in the conversation history already
 
     2. ANALYZE the three reports (textTherapist, imageTherapist, voiceTherapist):
-       - If user shared an image, you MUST reference what the image shows and how it reflects their emotional state
-       - If user shared voice, reference tone, pace, or emotional indicators
-       - Always integrate these insights naturally into your response
-       - Also crossreference the insights of the different inputs and reports from the current input
+       - If user actually shared an image: Reference what the image shows and how it reflects their emotional state
+       - If user actually shared voice: Reference tone, pace, or emotional indicators
+       - If media was actually provided: Integrate these insights naturally into your response
+       - Cross-reference the insights of the different inputs and reports from the current input
 
     3. IF reports show negative patterns → add gentle cognitive reframing
        IF no negativity → respond supportively
 
     4. End with one follow-up question
 
-    CRITICAL: Always reference any images, voice recordings, or other media the user shared. Connect these to their emotional experience.
+    CRITICAL: Only reference images, voice recordings, or other media if the user actually shared them. Do not assume or fabricate media references.
+    EXAMPLE
+    User greets: "Hello! Nice to meet you too. How are you doing today?"
+
+    RIGHT: "Hello! Nice to meet you too. How are you doing today?"
 
     EXAMPLE:
     User asks: "Can you give me steps to talk to my family?" + shares image of sad figure
 
     RIGHT: "Here are steps to have this conversation: 1) Choose a private moment, 2) Start with 'I need to share something difficult', 3) Be direct about what happened, 4) Let them know what support you need. I can see from the image you shared - that figure under the dark cloud really captures how heavy and overwhelming this feels right now. How do you think your family might react when you share this news?"
 
+    Conversation History:{conversation_history}
+
   expected_output: |
     When user asks a direct question:
     - Start with concrete steps/advice (2-3 sentences)
-    - Reference any images, voice, or other media they shared and connect it to their emotional state
+    - Only if media was actually shared: Reference images, voice, or other media and connect it to their emotional state
     - Brief acknowledgment of difficulty (1 sentence) 
     - One specific follow-up question
 
     When no direct question:
     - Acknowledge what they shared
-    - Always reference any images, voice recordings, or media shared
-    - Integrate all multimodal insights (what you see in images, hear in voice, read in text)
+    - Only if media was actually shared: Reference and interpret any visual or audio content
+    - Only if media was actually shared: Integrate multimodal insights (what you see in images, hear in voice, read in text)
     - Apply cognitive reframing if negativity detected
     - One follow-up question
 

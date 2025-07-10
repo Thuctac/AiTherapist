@@ -200,6 +200,66 @@ def create_app():
     
     return app, socketio
 
+import os
+import sys
+import logging
+from transformers import WhisperModel, WhisperProcessor
+import torch
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def setup_environment():
+    """Setup and optimize the Docker environment"""
+    
+    # 1. Check PyTorch installation
+    logger.info(f"PyTorch version: {torch.__version__}")
+    logger.info(f"CUDA available: {torch.cuda.is_available()}")
+    logger.info(f"CPU threads: {torch.get_num_threads()}")
+    
+    # 2. Pre-download Whisper models
+    logger.info("Pre-downloading Whisper models...")
+    try:
+        model = WhisperModel.from_pretrained("openai/whisper-base")
+        processor = WhisperProcessor.from_pretrained("openai/whisper-base")
+        logger.info("Whisper models downloaded successfully")
+        
+        # Clear memory
+        del model
+        del processor
+        torch.cuda.empty_cache() if torch.cuda.is_available() else None
+        
+    except Exception as e:
+        logger.error(f"Failed to download Whisper models: {e}")
+        sys.exit(1)
+    
+    # 3. Create necessary directories
+    directories = [
+        "/media/uploads/audio",
+        "/media/uploads/images",
+        "/usr/src/app/report",
+        "/root/.cache/huggingface",
+        "/usr/src/app/fine_tuned_whisper-base"
+    ]
+    
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+        logger.info(f"Created directory: {directory}")
+    
+    # 4. Set optimal environment variables
+    env_vars = {
+        "TRANSFORMERS_CACHE": "/root/.cache/huggingface",
+        "HF_HOME": "/root/.cache/huggingface",
+        "PYTORCH_CUDA_ALLOC_CONF": "max_split_size_mb:512",
+        "TOKENIZERS_PARALLELISM": "false"
+    }
+    
+    for key, value in env_vars.items():
+        os.environ[key] = value
+        logger.info(f"Set {key}={value}")
+    
+    logger.info("Setup completed successfully!")
+
 def main():
     """Run the Flask application with Socket.IO."""
     app, socketio = create_app()
@@ -209,9 +269,10 @@ def main():
         app, 
         host="0.0.0.0", 
         port=8080, 
-        debug=True,
+        debug=False,
         allow_unsafe_werkzeug=True  # For development only
     )
 
 if __name__ == "__main__":
+    setup_environment()
     main()
