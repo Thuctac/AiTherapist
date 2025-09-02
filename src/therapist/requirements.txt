@@ -21,3 +21,5 @@ PyJWT
 flask-cors
 pydub
 flask_socketio
+speechbrain
+sentencepiece

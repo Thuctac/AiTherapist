@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
-import { Volume2, VolumeX, RefreshCw } from "lucide-react";
+import { Volume2, VolumeX, RefreshCw, Play, Pause } from "lucide-react";
 import MessageInput from "./MessageInput";
 import MessageSkeleton from "./skeletons/MessageSkeleton";
+import StarRating from "./StarRating";
 import toast from "react-hot-toast";
 
 // Fallback avatars
@@ -29,6 +30,109 @@ const toAbs = (url) => {
 };
 
 /**
+ * AudioPlayer component for bot TTS audio with play/pause button
+ */
+const AudioPlayer = ({ audioUrl, autoPlay = false, className = "" }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadStart = () => setIsLoading(true);
+    const handleLoadedData = () => setIsLoading(false);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => setIsPlaying(false);
+    const handleError = (e) => {
+      console.error("Audio playback error:", e);
+      setIsLoading(false);
+      setIsPlaying(false);
+      toast.error("Failed to play audio");
+    };
+
+    audio.addEventListener("loadstart", handleLoadStart);
+    audio.addEventListener("loadeddata", handleLoadedData);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError);
+
+    return () => {
+      audio.removeEventListener("loadstart", handleLoadStart);
+      audio.removeEventListener("loadeddata", handleLoadedData);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (autoPlay && audioRef.current) {
+      playAudio();
+    }
+  }, [autoPlay]);
+
+  const playAudio = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      await audio.play();
+    } catch (error) {
+      console.error("Failed to play audio:", error);
+      toast.error("Failed to play audio");
+    }
+  };
+
+  const pauseAudio = () => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+    }
+  };
+
+  const togglePlayback = () => {
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      playAudio();
+    }
+  };
+
+  return (
+    <div className={`flex items-center space-x-2 ${className}`}>
+      <button
+        onClick={togglePlayback}
+        disabled={isLoading}
+        className="btn btn-circle btn-sm"
+        title={isPlaying ? "Pause" : "Play"}
+      >
+        {isLoading ? (
+          <div className="loading loading-spinner loading-xs"></div>
+        ) : isPlaying ? (
+          <Pause size={16} />
+        ) : (
+          <Play size={16} />
+        )}
+      </button>
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        preload="metadata"
+        className="hidden"
+      />
+      <span className="text-xs text-gray-500">
+        {isLoading ? "Loading..." : isPlaying ? "Playing..." : "Bot response"}
+      </span>
+    </div>
+  );
+};
+
+/**
  * ChatContainer renders the entire chat timeline for the current user.
  * Supports text, image and audio content inside a single message bubble.
  */
@@ -39,6 +143,7 @@ const ChatContainer = () => {
     isMessagesLoading,
     subscribeToMessages,
     unsubscribeFromMessages,
+    rateMessage,
   } = useChatStore();
 
   const { authUser } = useAuthStore();
@@ -46,6 +151,7 @@ const ChatContainer = () => {
   const messageEndRef = useRef(null);
   const [autoPlayAudio, setAutoPlayAudio] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastBotMessageId, setLastBotMessageId] = useState(null);
 
   // -------------------------------------------------- data loading
   useEffect(() => {
@@ -76,6 +182,17 @@ const ChatContainer = () => {
     }
   };
 
+  // Handle rating
+  const handleRating = async (messageId, rating) => {
+    try {
+      await rateMessage(messageId, rating);
+      toast.success("Thank you for your feedback!");
+    } catch (error) {
+      console.error("Failed to submit rating:", error);
+      toast.error("Failed to submit rating");
+    }
+  };
+
   // -------------------------------------------------- auto–scroll
   useEffect(() => {
     if (messageEndRef.current) {
@@ -83,16 +200,33 @@ const ChatContainer = () => {
     }
   }, [messages]);
 
-  // -------------------------------------------------- auto–play audio
+  // -------------------------------------------------- auto–play bot TTS audio
   useEffect(() => {
     if (!autoPlayAudio || !messages.length) return;
-    const last = messages[messages.length - 1];
-    const lastAudio = toAbs(last.audio);
-    if (lastAudio) {
-      const audio = new Audio(lastAudio);
-      audio.play().catch(console.error);
+
+    const lastMessage = messages[messages.length - 1];
+
+    // Check if this is a new bot message with audio
+    if (
+      lastMessage?.senderId === "bot" &&
+      lastMessage.audio &&
+      lastMessage._id !== lastBotMessageId
+    ) {
+      setLastBotMessageId(lastMessage._id);
+
+      // Small delay to ensure the audio element is rendered
+      setTimeout(() => {
+        const audioUrl = toAbs(lastMessage.audio);
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          audio.play().catch((error) => {
+            console.error("Auto-play failed:", error);
+            // Auto-play might be blocked by browser, that's okay
+          });
+        }
+      }, 100);
     }
-  }, [messages, autoPlayAudio]);
+  }, [messages, autoPlayAudio, lastBotMessageId]);
 
   // -------------------------------------------------- UI helpers
   const isWaitingResponse =
@@ -126,9 +260,15 @@ const ChatContainer = () => {
       <div className="p-2 flex justify-between">
         <button
           type="button"
-          title={autoPlayAudio ? "Disable auto‑play" : "Enable auto‑play"}
+          title={
+            autoPlayAudio
+              ? "Disable auto‑play of bot responses"
+              : "Enable auto‑play of bot responses"
+          }
           onClick={() => setAutoPlayAudio((v) => !v)}
-          className="btn btn-sm btn-circle"
+          className={`btn btn-sm btn-circle ${
+            autoPlayAudio ? "btn-primary" : "btn-ghost"
+          }`}
         >
           {autoPlayAudio ? <Volume2 size={20} /> : <VolumeX size={20} />}
         </button>
@@ -153,12 +293,16 @@ const ChatContainer = () => {
         ) : (
           messages.map((message, idx) => {
             const isUser = message.senderId === authUser?._id;
+            const isBot = message.senderId === "bot";
             const isLast = idx === messages.length - 1;
 
             // Convert relative backend URLs → absolute URLs we can actually fetch
             const messageText = message.text || "";
             const audioUrl = toAbs(message.audio || message.audioUrl);
             const imageUrl = toAbs(message.imageUrl);
+
+            // Extract the database message ID from the compound ID (e.g., "123-bot" -> "123")
+            const dbMessageId = message._id?.split("-")[0];
 
             return (
               <div
@@ -205,22 +349,39 @@ const ChatContainer = () => {
                     </div>
                   )}
 
-                  {/* Audio (if present) */}
-                  {audioUrl && (
+                  {/* User Audio (if present) - show full controls */}
+                  {audioUrl && isUser && (
                     <div className="mb-2">
                       <audio
                         controls
                         src={audioUrl}
                         className="w-full"
                         onError={(e) => {
-                          console.error("Error loading audio:", audioUrl, e);
+                          console.error(
+                            "Error loading user audio:",
+                            audioUrl,
+                            e
+                          );
                         }}
                       />
                     </div>
                   )}
 
+                  {/* Bot Audio (if present) - show custom player */}
+                  {audioUrl && isBot && (
+                    <div className="mb-2">
+                      <AudioPlayer
+                        audioUrl={audioUrl}
+                        autoPlay={false} // Don't auto-play individual components
+                        className="bg-base-200 rounded-lg p-2"
+                      />
+                    </div>
+                  )}
+
                   {/* Text (if present) */}
-                  {messageText && <p>{messageText}</p>}
+                  {messageText && (
+                    <p className="whitespace-pre-wrap">{messageText}</p>
+                  )}
 
                   {/* If no content was successfully rendered, show a fallback */}
                   {!messageText && !imageUrl && !audioUrl && (
@@ -229,6 +390,17 @@ const ChatContainer = () => {
                         ? "You sent media content"
                         : "Bot sent a response"}
                     </p>
+                  )}
+
+                  {/* Rating component for bot messages */}
+                  {isBot && dbMessageId && (
+                    <div className="mt-2 pt-2 border-t border-base-300">
+                      <StarRating
+                        messageId={dbMessageId}
+                        currentRating={message.rating}
+                        onRate={handleRating}
+                      />
+                    </div>
                   )}
                 </div>
               </div>

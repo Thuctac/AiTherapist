@@ -37,6 +37,7 @@ export const useChatStore = create((set, get) => ({
             msg.text?.substring(0, 20) + (msg.text?.length > 20 ? "..." : ""),
           audio: msg.audio,
           imageUrl: msg.imageUrl,
+          rating: msg.rating,
         });
       });
 
@@ -192,6 +193,67 @@ export const useChatStore = create((set, get) => ({
       }
     } finally {
       set({ isSending: false });
+    }
+  },
+
+  // Rate a message
+  rateMessage: async (messageId, rating) => {
+    try {
+      const user = useAuthStore.getState().authUser;
+      if (!user) {
+        throw new Error("No authenticated user");
+      }
+
+      if (!user.token) {
+        throw new Error("No authentication token found");
+      }
+
+      console.log(`Rating message ${messageId} with ${rating} stars`);
+
+      // Explicitly include the Authorization header to fix 401 error
+      const response = await axiosInstance.post(
+        `/direct/messages/rate/${messageId}`,
+        { rating },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+
+      console.log("Rating submitted successfully:", response.data);
+
+      // Update the message in the local state with the new rating
+      set((state) => ({
+        messages: state.messages.map((msg) => {
+          // Check if this is the bot message that was rated
+          if (msg._id && msg._id.startsWith(`${messageId}-bot`)) {
+            return { ...msg, rating };
+          }
+          return msg;
+        }),
+      }));
+
+      return true;
+    } catch (e) {
+      console.error("Error submitting rating:", e);
+      console.error("Response data:", e.response?.data);
+      console.error("Response status:", e.response?.status);
+
+      let errorMessage = "Failed to submit rating";
+      if (e.response?.status === 401) {
+        errorMessage = "Authentication failed. Please try logging in again.";
+      } else if (e.response) {
+        errorMessage =
+          e.response.data?.message || `Server error: ${e.response.status}`;
+      } else if (e.request) {
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        errorMessage = e.message || "An unexpected error occurred";
+      }
+
+      throw new Error(errorMessage);
     }
   },
 

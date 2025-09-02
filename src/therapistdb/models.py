@@ -1,11 +1,11 @@
-
-
 import uuid
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     Column,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -84,15 +84,31 @@ class Message(Base):
     # AI analysis + bot reply
     text_report = Column(Text)
     image_report = Column(Text)
-    audio_report = Column(Text)
+    audio_report = Column(Text)  # (aka "voice_report" in some export code)
     bot_text = Column(Text)
     bot_audio_url = Column(String)
 
-    timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    # Incremental-export flag for RLHF datasets
+    exported = Column(
+        Boolean,
+        nullable=False,
+        server_default=sql_text("false"),
+        default=False,
+        comment="Marked true once this bot message has been exported for RLHF.",
+    )
+
+    timestamp = Column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
 
     conversation = relationship("Conversation", back_populates="messages")
     ratings = relationship(
         "Rating", back_populates="message", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_messages_exported", "exported"),
+        Index("ix_messages_conversation_id", "conversation_id"),
     )
 
 
@@ -107,7 +123,7 @@ class Rating(Base):
 
     __table_args__ = (
         CheckConstraint("rating BETWEEN 1 AND 5", name="ck_rating_range"),
+        Index("ix_ratings_message_id", "message_id"),
     )
 
     message = relationship("Message", back_populates="ratings")
-

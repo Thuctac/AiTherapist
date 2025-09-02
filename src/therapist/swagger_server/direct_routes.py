@@ -1,4 +1,4 @@
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, send_file
 import os
 import uuid
 import jwt
@@ -7,9 +7,10 @@ from pathlib import Path
 import traceback
 from sqlalchemy import select
 
-from swagger_server.db import engine, users, conversations, messages
+from swagger_server.db import engine, users, conversations, messages, ratings
 from logic.therapy import TherapySession
 from swagger_server.audio_converter import save_and_convert_audio
+from swagger_server.tts_service import generate_therapy_tts_safe, cleanup_old_tts_files, is_tts_enabled
 
 # ---------------------------------------------------------------------------
 # File-system config
@@ -324,6 +325,38 @@ def register_direct_routes(app):
             
             print(f"Bot reply: {bot_reply[:100]}..." if bot_reply else "No bot reply")
             
+            # Generate TTS for bot reply (quota-safe version)
+            bot_audio_path = None
+            if bot_reply and bot_reply.strip() and is_tts_enabled():
+                try:
+                    print("Attempting TTS generation for bot reply...")
+                    # Create TTS directory if it doesn't exist
+                    tts_dir = AUDIO_DIR / "tts"
+                    tts_dir.mkdir(parents=True, exist_ok=True)
+                    
+                    # Generate TTS audio with quota protection
+                    bot_audio_path = generate_therapy_tts_safe(bot_reply, tts_dir)
+                    
+                    if bot_audio_path:
+                        print(f"✅ TTS generated successfully: {bot_audio_path}")
+                        print(f"TTS public URL: {get_public_url(bot_audio_path)}")
+                        debug_file_path(bot_audio_path, "Bot TTS")
+                        
+                        # Cleanup old TTS files to prevent disk space issues
+                        cleanup_old_tts_files(tts_dir, max_age_hours=24)
+                    else:
+                        print("⚠️ TTS generation skipped (quota/disabled/error)")
+                        
+                except Exception as e:
+                    print(f"⚠️ TTS generation failed, continuing without audio: {str(e)}")
+                    # Continue without TTS - don't let TTS failures break message flow
+                    bot_audio_path = None
+            else:
+                if not is_tts_enabled():
+                    print("ℹ️ TTS is disabled via environment variable")
+                elif not bot_reply:
+                    print("ℹ️ No bot reply to convert to speech")
+            
             # Get reports
             text_rep = _read_report("text_report.md")
             img_rep = _read_report("image_report.md")
@@ -359,7 +392,7 @@ def register_direct_routes(app):
                         image_report=img_rep,
                         audio_report=aud_rep,
                         bot_text=bot_reply,
-                        bot_audio_url=None,
+                        bot_audio_url=bot_audio_path,  # Store TTS audio path
                     )
                 )
                 row = conn.execute(
@@ -374,6 +407,7 @@ def register_direct_routes(app):
                 print(f"Audio path: {row.audio_url}")
                 print(f"Bot text length: {len(row.bot_text) if row.bot_text else 0}")
                 print(f"Bot text preview: {row.bot_text[:50]}..." if row.bot_text else "None")
+                print(f"Bot audio path: {row.bot_audio_url}")
                 print("----- END DEBUG -----\n")
             
             print("Message saved successfully")
@@ -402,7 +436,7 @@ def register_direct_routes(app):
                     "senderId": "bot",
                     "conversationId": str(row.conversation_id),
                     "text": row.bot_text,
-                    "audio": get_public_url(row.bot_audio_url),
+                    "audio": get_public_url(row.bot_audio_url),  # Include bot TTS audio
                     "imageUrl": None,
                     "createdAt": timestamp,
                 }
@@ -426,7 +460,7 @@ def register_direct_routes(app):
         
         This version correctly handles the database schema where each row
         contains both a user message and bot response, returning them as
-        separate message objects.
+        separate message objects. Also includes ratings for messages.
         """
         try:
             print(f"Direct route hit for getting messages, user_id: {user_id}")
@@ -439,8 +473,14 @@ def register_direct_routes(app):
                     print("No conversation found for user")
                     return jsonify([]), 200
                 
+                # Get messages with their ratings
                 rows = conn.execute(
-                    select(messages)
+                    select(
+                        messages,
+                        ratings.c.rating
+                    )
+                    .select_from(messages)
+                    .outerjoin(ratings, ratings.c.message_id == messages.c.id)
                     .where(messages.c.conversation_id == conv.id)
                     .order_by(messages.c.id)
                 ).fetchall()
@@ -452,6 +492,8 @@ def register_direct_routes(app):
                     debug_file_path(row.audio_url, "Database Audio")
                 if row.image_url:
                     debug_file_path(row.image_url, "Database Image")
+                if row.bot_audio_url:
+                    debug_file_path(row.bot_audio_url, "Database Bot Audio")
             
             # Convert rows to message objects, splitting each row into user message and bot response
             result = []
@@ -476,9 +518,10 @@ def register_direct_routes(app):
                         "senderId": "bot",
                         "conversationId": str(row.conversation_id),
                         "text": row.bot_text,
-                        "audio": get_public_url(row.bot_audio_url),
+                        "audio": get_public_url(row.bot_audio_url),  # Include bot TTS audio
                         "imageUrl": None,
                         "createdAt": row.timestamp.isoformat(),
+                        "rating": row.rating  # Include rating if present
                     }
                     result.append(bot_message)
             
@@ -500,6 +543,89 @@ def register_direct_routes(app):
         except Exception as e:
             print(f"Error in direct_get_messages: {str(e)}")
             traceback.print_exc()
+            return jsonify({"message": f"Server error: {str(e)}"}), 500
+    
+    @app.route('/direct/messages/rate/<message_id>', methods=['POST'])
+    def direct_rate_message(message_id):
+        """Handle rating submission for a message."""
+        try:
+            print(f"\n{'=' * 50}")
+            print(f"DIRECT ROUTE HIT: POST /direct/messages/rate/{message_id}")
+            
+            data = request.get_json()
+            if not data:
+                return jsonify({"message": "No data provided"}), 400
+                
+            rating = data.get('rating')
+            
+            # Validate rating
+            if not rating or not isinstance(rating, int):
+                return jsonify({"message": "Rating must be an integer"}), 400
+                
+            if rating < 1 or rating > 5:
+                return jsonify({"message": "Rating must be between 1 and 5"}), 400
+            
+            print(f"Rating value: {rating}")
+            
+            # Get authentication from header
+            auth_header = request.headers.get("Authorization", "")
+            if not auth_header.startswith("Bearer "):
+                return jsonify({"message": "Missing Bearer token"}), 401
+            
+            token = auth_header.split(" ", 1)[1]
+            payload, error = _decode_token(token)
+            
+            if error:
+                return jsonify({"message": error}), 401
+                
+            user_id = payload.get("user_id")
+            
+            with engine.begin() as conn:
+                # Check if message exists and belongs to user's conversation
+                message = conn.execute(
+                    select(messages.c.id, messages.c.conversation_id)
+                    .select_from(messages)
+                    .join(conversations)
+                    .where(messages.c.id == message_id)
+                    .where(conversations.c.user_id == user_id)
+                ).first()
+                
+                if not message:
+                    return jsonify({"message": "Message not found or access denied"}), 404
+                
+                # Check if a rating already exists
+                existing_rating = conn.execute(
+                    select(ratings.c.id)
+                    .where(ratings.c.message_id == message_id)
+                ).first()
+                
+                if existing_rating:
+                    # Update existing rating
+                    conn.execute(
+                        ratings.update()
+                        .where(ratings.c.id == existing_rating.id)
+                        .values(rating=rating)
+                    )
+                    print(f"Updated existing rating for message {message_id}")
+                else:
+                    # Insert new rating
+                    conn.execute(
+                        ratings.insert().values(
+                            message_id=message_id,
+                            rating=rating
+                        )
+                    )
+                    print(f"Created new rating for message {message_id}")
+            
+            print(f"Rating submitted successfully")
+            print(f"{'=' * 50}\n")
+            
+            return jsonify({"message": "Rating submitted successfully", "rating": rating}), 201
+            
+        except Exception as e:
+            print(f"ERROR in direct_rate_message: {str(e)}")
+            traceback.print_exc()
+            print(f"{'=' * 50}\n")
             return jsonify({"message": f"Server error: {str(e)}"}), 500
     
     @app.route('/direct/messages/test/<user_id>', methods=['POST'])
@@ -609,7 +735,7 @@ def register_direct_routes(app):
                 content_type = 'image/jpeg'
             
             if os.path.exists(file_path):
-                response = current_app.send_file(file_path)
+                response = send_file(file_path)
                 if content_type:
                     response.headers['Content-Type'] = content_type
                 return response
@@ -619,6 +745,60 @@ def register_direct_routes(app):
             print(f"Error in direct_test_file: {str(e)}")
             traceback.print_exc()
             return jsonify({"message": f"Server error: {str(e)}"}), 500
+
+    # Add a route to serve TTS files specifically
+    @app.route('/uploads/audio/tts/<filename>', methods=['GET'])
+    def serve_tts_file(filename):
+        """Serve TTS audio files."""
+        try:
+            tts_dir = AUDIO_DIR / "tts"
+            file_path = tts_dir / filename
+            
+            print(f"Serving TTS file: {file_path}")
+            debug_file_path(file_path, "TTS File")
+            
+            if file_path.exists():
+                response = send_file(file_path)
+                response.headers['Content-Type'] = 'audio/mpeg'
+                response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache for 1 hour
+                return response
+            else:
+                print(f"TTS file not found: {file_path}")
+                return jsonify({"message": f"TTS file {filename} not found"}), 404
+                
+        except Exception as e:
+            print(f"Error serving TTS file: {str(e)}")
+            traceback.print_exc()
+            return jsonify({"message": f"Server error: {str(e)}"}), 500
+
+    # Add TTS status endpoint
+    @app.route('/direct/tts/status', methods=['GET'])
+    def direct_tts_status():
+        """Check TTS availability and quota status."""
+        try:
+            from tts_service import check_openai_quota
+            
+            tts_enabled = is_tts_enabled()
+            quota_available = check_openai_quota() if tts_enabled else False
+            
+            status = {
+                "tts_enabled": tts_enabled,
+                "quota_available": quota_available,
+                "status": "available" if (tts_enabled and quota_available) else "unavailable",
+                "reason": "disabled" if not tts_enabled else ("quota_exceeded" if not quota_available else "available")
+            }
+            
+            print(f"TTS Status check: {status}")
+            return jsonify(status), 200
+            
+        except Exception as e:
+            print(f"Error checking TTS status: {str(e)}")
+            return jsonify({
+                "tts_enabled": False,
+                "quota_available": False,
+                "status": "error",
+                "reason": "service_error"
+            }), 500
     
     # ---------------------------------------------------------------------------
     # Authentication routes
